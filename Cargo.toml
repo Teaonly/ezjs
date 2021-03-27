@@ -1,0 +1,12 @@
+[package]
+name = "ezjs"
+version = "0.1.0"
+authors = ["Zhou Chang <achang.zhou@gmail.com>"]
+edition = "2018"
+description = "ezjs is a simple and micro Javascript (ES5) engine is Rust."
+
+[lib]
+name = "ezjs"
+path = "src/lib.rs"
+
+[dependencies]
