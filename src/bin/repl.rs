@@ -10,7 +10,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 pub fn main() {
     let mut rt = ezjs::new_runtime();
 
-    println!("Express REPL v0.1.0");
+    println!("REPL of ezjs v0.1.0");
     let args: Vec<String> = env::args().collect();
     for i in 1..args.len() {
         let content = fs::read_to_string(&args[i]).unwrap();
