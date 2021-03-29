@@ -102,8 +102,8 @@ impl Clone for JsValue {
 					JsValue::JSObject(SharedObject_new(obj.borrow().clone_string()))
 				} else {
 					JsValue::JSObject(obj.clone())
-				}				
-			} 
+				}
+			}
 		}
     }
 }

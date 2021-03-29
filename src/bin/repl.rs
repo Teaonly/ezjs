@@ -15,6 +15,9 @@ pub fn main() {
     for i in 1..args.len() {
         let content = fs::read_to_string(&args[i]).unwrap();
         let vmf = ezjs::build_function_from_code(&content).unwrap();
+        if args.len() == 1 {
+            ezjs::dump_function(&vmf);
+        }
         ezjs::run_script(&mut rt, vmf).unwrap();
     }
 

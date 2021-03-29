@@ -122,7 +122,7 @@ impl JsRuntime {
 		let value = self.top(-1);
 		self.cenv.borrow().put_variable(name);
 		let mut prop = self.cenv.borrow().get_variable(name);
-		prop.value = value;
+		prop.value.replace(value);
 		self.cenv.borrow().set_variable(name, prop);
 
 		return Ok(());
