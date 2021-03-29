@@ -2,8 +2,6 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
-use std::ffi::c_void;
-
 use crate::bytecode::*;
 
 // runtime stuff
@@ -70,7 +68,7 @@ pub struct JsException {
 #[allow(non_camel_case_types)]
 #[derive(Clone)]
 pub struct JsExpander {
-	pub ptr: *const c_void,
+	pub ptr: u64,
 }
 
 #[allow(non_camel_case_types)]
@@ -126,6 +124,10 @@ pub struct JsPrototype {
 
 	/* prototype for exceptions */
 	pub exception_prototype: SharedObject,
+}
+
+pub trait Expandable : Sized + Clone {
+	fn hash(&self) -> u64;
 }
 
 #[allow(non_camel_case_types)]

@@ -2,7 +2,6 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::rc::Rc;
-use std::ffi::c_void;
 
 use crate::common::*;
 use crate::bytecode::*;
@@ -430,7 +429,7 @@ impl JsObject {
         }
 	}
 	
-	pub fn new_expand(ptr:*const c_void) -> JsObject {
+	pub fn new_expand(ptr: u64) -> JsObject {
 		JsObject {
 			extensible:	false,
 			__proto__: None,
