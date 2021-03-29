@@ -8,6 +8,7 @@ fn object_constructor(rt: &mut JsRuntime) {
     let value = rt.top(-1);
     if value.is_something() {        
         rt.push( value.duplicate() );
+        return;
     }
     rt.push( SharedValue::new_vanilla(rt.prototypes.object_prototype.clone()) );
 }

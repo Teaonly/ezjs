@@ -33,13 +33,13 @@ pub fn main() {
 
                     println!("<{}>", end - begin);
                 }
-            },            
+            },
             Err(err) => {
                 println!("Error: {:?}", err);
                 break
             }
         }
     }
-        
+
     rt.push_undefined();
 }
