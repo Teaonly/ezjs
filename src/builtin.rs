@@ -3,6 +3,15 @@ use std::collections::HashMap;
 use crate::bytecode::*;
 use crate::runtime::*;
 
+impl JsBuiltinFunction {
+	pub fn new(f: fn(&mut JsRuntime), argc: usize) -> Self {
+		JsBuiltinFunction {
+			f:		f,
+			argc:	argc
+		}
+	}
+}
+
 // The Object class 
 fn object_constructor(rt: &mut JsRuntime) {
     let value = rt.top(-1);
@@ -179,12 +188,10 @@ fn exception_proto_builtins() -> HashMap<String, JsBuiltinFunction> {
 }
 
 // build class's global functions
-fn create_class_functions( target: SharedObject, properties: HashMap<String, JsBuiltinFunction>) {
+fn create_class_functions(rt: &mut JsRuntime, target: SharedObject, properties: HashMap<String, JsBuiltinFunction>) {
     let mut class_obj = target.borrow_mut();
     for (k, v) in properties {
-        let f = v.f;
-        let argc = v.argc; 
-        let func_obj = JsObject::new_builtin(f, argc);
+        let func_obj = rt.new_builtin(v);
         
         let mut prop = JsProperty::new();
         prop.fill_attr(JS_READONLY_ATTR);
@@ -194,19 +201,16 @@ fn create_class_functions( target: SharedObject, properties: HashMap<String, JsB
     }
 }
 
-// build prototypes chian
-fn create_builtin_class(constructor: JsBuiltinFunction, properties: HashMap<String, JsBuiltinFunction>, top: Option<SharedObject>) -> (SharedObject, SharedObject) {
-    let mut class_obj = JsObject::new();
+// build prototypes chain
+fn create_builtin_class(rt: &mut JsRuntime, constructor: JsBuiltinFunction, properties: HashMap<String, JsBuiltinFunction>, top: Option<SharedObject>) -> (SharedObject, SharedObject) {
+    let mut class_obj = rt.new_builtin(constructor);
     class_obj.extensible = false;
-    class_obj.value = JsClass::builtin(constructor);
     let class_obj =  SharedObject_new(class_obj);
     
     let mut prototype_obj = JsObject::new();
     prototype_obj.extensible = false;
     for (k, v) in properties {
-        let f = v.f;
-        let argc = v.argc; 
-        let func_obj = JsObject::new_builtin(f, argc);
+        let func_obj = rt.new_builtin(v);
         
         let mut prop = JsProperty::new();
         prop.fill_attr(JS_READONLY_ATTR);
@@ -238,28 +242,28 @@ fn set_global_class(rt: &mut JsRuntime, name: &str, class_obj: SharedObject) {
 
 pub fn prototypes_init(rt: &mut JsRuntime) {
     // Object
-    let (top_class, top_prototype) = create_builtin_class(JsBuiltinFunction::new(object_constructor, 1), object_proto_builtins(), None);
-    create_class_functions(top_class.clone(), object_builtins());
+    let (top_class, top_prototype) = create_builtin_class(rt, JsBuiltinFunction::new(object_constructor, 1), object_proto_builtins(), None);
+    create_class_functions(rt, top_class.clone(), object_builtins());
     set_global_class(rt, "Object", top_class.clone());
     rt.prototypes.object_prototype = top_prototype.clone();
     
     // String
-    let (string_classs_object, string_prototype) = create_builtin_class( JsBuiltinFunction::new(string_constructor, 1), string_proto_builtins(), Some(top_prototype.clone()));
+    let (string_classs_object, string_prototype) = create_builtin_class(rt, JsBuiltinFunction::new(string_constructor, 1), string_proto_builtins(), Some(top_prototype.clone()));
     set_global_class(rt, "String", string_classs_object.clone());
     rt.prototypes.string_prototype = string_prototype;
 
     // Array
-    let (array_classs_object, array_prototype) = create_builtin_class( JsBuiltinFunction::new(array_constructor, 0), array_proto_builtins(), Some(top_prototype.clone()));
+    let (array_classs_object, array_prototype) = create_builtin_class(rt, JsBuiltinFunction::new(array_constructor, 0), array_proto_builtins(), Some(top_prototype.clone()));
     set_global_class(rt, "Array", array_classs_object.clone());
     rt.prototypes.array_prototype = array_prototype;
 
     // Function
-    let (func_classs_object, func_prototype) = create_builtin_class( JsBuiltinFunction::new(function_constructor, 0), function_proto_builtins(), Some(top_prototype.clone()));
+    let (func_classs_object, func_prototype) = create_builtin_class(rt, JsBuiltinFunction::new(function_constructor, 0), function_proto_builtins(), Some(top_prototype.clone()));
     set_global_class(rt, "Function", func_classs_object.clone());
     rt.prototypes.function_prototype = func_prototype;
     
     // Exception
-    let (exp_classs_object, exp_prototype) = create_builtin_class( JsBuiltinFunction::new(exception_constructor, 1), exception_proto_builtins(), Some(top_prototype.clone()));
+    let (exp_classs_object, exp_prototype) = create_builtin_class(rt, JsBuiltinFunction::new(exception_constructor, 1), exception_proto_builtins(), Some(top_prototype.clone()));
     set_global_class(rt, "Exception", exp_classs_object.clone());
     rt.prototypes.exception_prototype = exp_prototype;
 }
@@ -289,6 +293,9 @@ pub fn builtin_init(runtime: &mut JsRuntime) {
     // TODO : isFinite() isNaN() parseFloat() parseInt()
 
     // register some basic builtin functions
-    runtime.genv.borrow_mut().init_var("assert", SharedValue::new_object(JsObject::new_builtin(assert, 2)) );
-    runtime.genv.borrow_mut().init_var("println", SharedValue::new_object(JsObject::new_builtin(println, 1)) );
+    let fobj = runtime.new_builtin(JsBuiltinFunction::new(assert, 2));
+    runtime.genv.borrow_mut().init_var("assert", SharedValue::new_object(fobj) );
+
+    let fobj = runtime.new_builtin(JsBuiltinFunction::new(println, 1));
+    runtime.genv.borrow_mut().init_var("println", SharedValue::new_object(fobj));
 }

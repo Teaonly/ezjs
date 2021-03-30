@@ -369,15 +369,6 @@ impl JsProperty {
 	}
 }
 
-impl JsBuiltinFunction {
-	pub fn new(f: fn(&mut JsRuntime), argc: usize) -> Self {
-		JsBuiltinFunction {
-			f:		f,
-			argc:	argc
-		}
-	}
-}
-
 impl JsException {
 	pub fn new(msg: String) -> JsException {
 		JsException{
@@ -470,19 +461,6 @@ impl JsObject {
 		}
 	}
 
-	pub fn new_builtin(f: fn(&mut JsRuntime), argc: usize) -> JsObject {
-		let bvalue = JsClass::builtin(JsBuiltinFunction {
-			f: f,
-			argc: argc,
-		});
-		JsObject {
-			extensible:	false,
-			__proto__: None,
-			properties: HashMap::new(),
-			value: bvalue,
-		}
-	}
-
 	pub fn clone_string(&self) -> JsObject {
 		assert!( self.is_string() );
 
@@ -544,10 +522,10 @@ impl JsObject {
 			return true;
 		}
 		return false;
-	}
-	pub fn get_builtin(&self) -> JsBuiltinFunction {
-		if let JsClass::builtin(ref func) = self.value {
-			return func.clone();
+	}	
+	pub fn get_builtin(&self) -> usize {
+		if let JsClass::builtin(fid) = self.value {
+			return fid;
 		}
 		panic!("Object can't be a builtin!")
 	}

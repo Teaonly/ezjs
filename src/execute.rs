@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::rc::Rc;
 use std::cmp;
 
@@ -68,6 +69,18 @@ impl JsEnvironment {
 }
 
 impl JsRuntime {
+	/* builtins */
+	pub fn new_builtin(&mut self, bf: JsBuiltinFunction) -> JsObject {
+		let fid = self.builtins.len();
+		self.builtins.push(bf);
+		JsObject {
+			extensible:	false,
+			__proto__: None,
+			properties: HashMap::new(),
+			value: JsClass::builtin(fid),
+		}
+	}
+
 	/* environment's variables */
 	fn delvariable(&mut self, name: &str) -> bool {
 		let mut env: SharedScope = self.cenv.clone();
@@ -1492,7 +1505,7 @@ fn jscall_function(rt: &mut JsRuntime, argc: usize) -> Result<(), JsException> {
 fn jscall_builtin(rt: &mut JsRuntime, argc: usize) {
 	let bot = rt.stack.len() - 1 - argc;
 	let fobj = rt.stack[bot-1].get_object();
-	let builtin = fobj.borrow().get_builtin();
+	let builtin = rt.builtins[fobj.borrow().get_builtin()];	
 	
 	if argc > builtin.argc {
 		for _i in builtin.argc .. argc {

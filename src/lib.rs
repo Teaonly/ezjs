@@ -73,6 +73,7 @@ pub fn new_runtime() -> JsRuntime {
 	let cenv = genv.clone();
 
 	let mut runtime = JsRuntime {
+		builtins:	Vec::new(),
 		prototypes:	prototypes,
 		genv:		genv,
 		cenv:		cenv,

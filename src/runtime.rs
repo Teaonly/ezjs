@@ -46,13 +46,6 @@ pub struct JsFunction {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Copy, Clone)]
-pub struct JsBuiltinFunction {
-	pub f:		fn(&mut JsRuntime),
-	pub argc:	usize,
-}
-
-#[allow(non_camel_case_types)]
 #[derive(Clone)]
 pub struct JsIterator {
 	pub keys:	Vec<String>,
@@ -80,7 +73,7 @@ pub enum JsClass {
 	string(String),
 	array(Vec<SharedValue>),
 	function(JsFunction),
-	builtin(JsBuiltinFunction),
+	builtin(usize),
 }
 
 #[allow(non_camel_case_types)]
@@ -126,12 +119,20 @@ pub struct JsPrototype {
 	pub exception_prototype: SharedObject,
 }
 
+#[allow(non_camel_case_types)]
+#[derive(Copy, Clone)]
+pub struct JsBuiltinFunction {
+	pub f:		fn(&mut JsRuntime),
+	pub argc:	usize,
+}
+
 pub trait Expandable : Sized + Clone {
 	fn hash(&self) -> u64;
 }
 
 #[allow(non_camel_case_types)]
 pub struct JsRuntime {
+	pub builtins:		Vec<JsBuiltinFunction>,
 	pub prototypes:		JsPrototype,
 
 	pub genv:			SharedScope,	
