@@ -3,8 +3,8 @@ use std::collections::HashMap;
 use crate::bytecode::*;
 use crate::runtime::*;
 
-impl JsBuiltinFunction {
-	pub fn new(f: fn(&mut JsRuntime), argc: usize) -> Self {
+impl<T:Expandable> JsBuiltinFunction<T> {
+	pub fn new(f: fn(&mut JsRuntime<T>), argc: usize) -> Self {
 		JsBuiltinFunction {
 			f:		f,
 			argc:	argc
@@ -13,7 +13,7 @@ impl JsBuiltinFunction {
 }
 
 // The Object class 
-fn object_constructor(rt: &mut JsRuntime) {
+fn object_constructor<T: Expandable>(rt: &mut JsRuntime<T>) {
     let value = rt.top(-1);
     if value.is_something() {        
         rt.push( value.duplicate() );
@@ -22,7 +22,7 @@ fn object_constructor(rt: &mut JsRuntime) {
     rt.push( SharedValue::new_vanilla(rt.prototypes.object_prototype.clone()) );
 }
 
-fn object_preventextensions(rt: &mut JsRuntime) {
+fn object_preventextensions<T: Expandable>(rt: &mut JsRuntime<T>) {
     let value = rt.top(-1);
     if value.is_object() {
         value.get_object().borrow_mut().extensible = false;
@@ -30,11 +30,11 @@ fn object_preventextensions(rt: &mut JsRuntime) {
     rt.push(value);
 }
 
-fn object_tostring(rt: &mut JsRuntime)  {
+fn object_tostring<T: Expandable>(rt: &mut JsRuntime<T>)  {
     rt.push_string( "[object]".to_string() );
 }
 
-fn object_setprototypeof(rt: &mut JsRuntime) {
+fn object_setprototypeof<T: Expandable>(rt: &mut JsRuntime<T>) {
     let target = rt.top(-2);
     if !target.is_object() {
         rt.push_undefined();    
@@ -51,7 +51,7 @@ fn object_setprototypeof(rt: &mut JsRuntime) {
     rt.push(target);
 }
 
-fn object_proto_builtins() -> HashMap<String, JsBuiltinFunction> {
+fn object_proto_builtins<T: Expandable>() -> HashMap<String, JsBuiltinFunction<T>> {
     let mut builtins = HashMap::new();
     builtins.insert("toString".to_string(), JsBuiltinFunction::new(object_tostring, 0));
     //builtins.insert("preventExtensions".to_string(), JsBuiltinFunction::new(object_preventextensions, 1));
@@ -59,7 +59,7 @@ fn object_proto_builtins() -> HashMap<String, JsBuiltinFunction> {
     return builtins;
 }
 
-fn object_builtins() -> HashMap<String, JsBuiltinFunction> {
+fn object_builtins<T:Expandable>() -> HashMap<String, JsBuiltinFunction<T>> {
     let mut builtins = HashMap::new();   
     builtins.insert("preventExtensions".to_string(), JsBuiltinFunction::new(object_preventextensions, 1));
     builtins.insert("setPrototypeOf".to_string(), JsBuiltinFunction::new(object_setprototypeof, 2));
@@ -67,7 +67,7 @@ fn object_builtins() -> HashMap<String, JsBuiltinFunction> {
 }
 
 // The String class
-fn string_constructor(rt: &mut JsRuntime) {
+fn string_constructor<T:Expandable>(rt: &mut JsRuntime<T>) {
     let value = rt.top(-1);
     if value.is_string() {
         rt.push(value);
@@ -80,13 +80,13 @@ fn string_constructor(rt: &mut JsRuntime) {
     rt.push_string("".to_string());
 }
 
-fn string_tostring(rt: &mut JsRuntime) {
+fn string_tostring<T:Expandable>(rt: &mut JsRuntime<T>) {
     let value = rt.top(-1).duplicate();     // this object
     assert!(value.is_string());
     rt.push(value);
 }
 
-fn string_proto_builtins() -> HashMap<String, JsBuiltinFunction> {
+fn string_proto_builtins<T:Expandable>() -> HashMap<String, JsBuiltinFunction<T>> {
     // TODO
     let mut builtins = HashMap::new();
     builtins.insert("toString".to_string(), JsBuiltinFunction::new(string_tostring, 0));    
@@ -94,14 +94,14 @@ fn string_proto_builtins() -> HashMap<String, JsBuiltinFunction> {
 }
 
 // The Array class
-fn array_constructor(rt: &mut JsRuntime) {
+fn array_constructor<T:Expandable>(rt: &mut JsRuntime<T>) {
     let a = JsClass::array(Vec::new());
     let obj = JsObject::new_with(rt.prototypes.array_prototype.clone(), a);
     let jv = SharedValue::new_object(obj);
     rt.push(jv);
 }
 
-fn array_tostring(rt: &mut JsRuntime) {
+fn array_tostring<T:Expandable>(rt: &mut JsRuntime<T>) {
     let value = rt.top(-1);
     assert!(value.is_object());
     let sobj = value.get_object();
@@ -119,7 +119,7 @@ fn array_tostring(rt: &mut JsRuntime) {
     rt.push_string(result);
 }
 
-fn array_push(rt: &mut JsRuntime) {
+fn array_push<T:Expandable>(rt: &mut JsRuntime<T>) {
     let target = rt.top(-2);
     assert!(target.is_object());
     let sobj = target.get_object();
@@ -132,7 +132,7 @@ fn array_push(rt: &mut JsRuntime) {
     rt.push_number(object.get_array().len() as f64);
 }
 
-fn array_proto_builtins() -> HashMap<String, JsBuiltinFunction> {
+fn array_proto_builtins<T:Expandable>() -> HashMap<String, JsBuiltinFunction<T>> {
     let mut builtins = HashMap::new();
     builtins.insert("toString".to_string(), JsBuiltinFunction::new(array_tostring, 0));
     builtins.insert("push".to_string(), JsBuiltinFunction::new(array_push, 1));
@@ -140,18 +140,18 @@ fn array_proto_builtins() -> HashMap<String, JsBuiltinFunction> {
 }
 
 // The Function class
-fn function_constructor(rt: &mut JsRuntime) {
+fn function_constructor<T:Expandable>(rt: &mut JsRuntime<T>) {
     let vmf = SharedFunction_new(VMFunction::new_anonymous());
     let mut fobj = JsObject::new_function(vmf, rt.cenv.clone());
     fobj.__proto__ = Some(rt.prototypes.function_prototype.clone());
     rt.push(SharedValue::new_object(fobj));
 }
 
-fn function_tostring(rt: &mut JsRuntime) {
+fn function_tostring<T:Expandable>(rt: &mut JsRuntime<T>) {
     rt.push_string("function(...) {...}".to_string());
 }
 
-fn function_proto_builtins() -> HashMap<String, JsBuiltinFunction> {
+fn function_proto_builtins<T:Expandable>() -> HashMap<String, JsBuiltinFunction<T>> {
     // TODO
     let mut builtins = HashMap::new();
     builtins.insert("toString".to_string(), JsBuiltinFunction::new(function_tostring, 0));    
@@ -159,7 +159,7 @@ fn function_proto_builtins() -> HashMap<String, JsBuiltinFunction> {
 }
 
 // The Exception class
-fn exception_constructor(rt: &mut JsRuntime) {
+fn exception_constructor<T:Expandable>(rt: &mut JsRuntime<T>) {
     
     let value = rt.top(-1);    
     let msg = value.to_string();
@@ -169,17 +169,17 @@ fn exception_constructor(rt: &mut JsRuntime) {
     rt.push(value);
 }
 
-fn exception_tostring(rt: &mut JsRuntime) {
+fn exception_tostring<T:Expandable>(rt: &mut JsRuntime<T>) {
     rt.push_string("exception(...) {...}".to_string());
 }
 
-fn exception_message(rt: &mut JsRuntime) {
+fn exception_message<T:Expandable>(rt: &mut JsRuntime<T>) {
     let exp_object = rt.top(-1).get_object();
     let exp = exp_object.borrow().get_exception();
     rt.push_string(exp.msg);
 }
 
-fn exception_proto_builtins() -> HashMap<String, JsBuiltinFunction> {
+fn exception_proto_builtins<T:Expandable>() -> HashMap<String, JsBuiltinFunction<T>> {
     // TODO
     let mut builtins = HashMap::new();
     builtins.insert("toString".to_string(), JsBuiltinFunction::new(exception_tostring, 0));
@@ -188,7 +188,7 @@ fn exception_proto_builtins() -> HashMap<String, JsBuiltinFunction> {
 }
 
 // build class's global functions
-fn create_class_functions(rt: &mut JsRuntime, target: SharedObject, properties: HashMap<String, JsBuiltinFunction>) {
+fn create_class_functions<T:Expandable>(rt: &mut JsRuntime<T>, target: SharedObject, properties: HashMap<String, JsBuiltinFunction<T>>) {
     let mut class_obj = target.borrow_mut();
     for (k, v) in properties {
         let func_obj = rt.new_builtin(v);
@@ -202,7 +202,7 @@ fn create_class_functions(rt: &mut JsRuntime, target: SharedObject, properties: 
 }
 
 // build prototypes chain
-fn create_builtin_class(rt: &mut JsRuntime, constructor: JsBuiltinFunction, properties: HashMap<String, JsBuiltinFunction>, top: Option<SharedObject>) -> (SharedObject, SharedObject) {
+fn create_builtin_class<T:Expandable>(rt: &mut JsRuntime<T>, constructor: JsBuiltinFunction<T>, properties: HashMap<String, JsBuiltinFunction<T>>, top: Option<SharedObject>) -> (SharedObject, SharedObject) {
     let mut class_obj = rt.new_builtin(constructor);
     class_obj.extensible = false;
     let class_obj =  SharedObject_new(class_obj);
@@ -233,14 +233,14 @@ fn create_builtin_class(rt: &mut JsRuntime, constructor: JsBuiltinFunction, prop
     
     return (class_obj, prototype_obj);
 }
-fn set_global_class(rt: &mut JsRuntime, name: &str, class_obj: SharedObject) {
+fn set_global_class<T:Expandable>(rt: &mut JsRuntime<T>, name: &str, class_obj: SharedObject) {
     let mut prop = JsProperty::new();
     prop.fill_attr(JS_READONLY_ATTR);
     prop.value = SharedValue::new_sobject(class_obj);
     rt.genv.borrow_mut().target().borrow_mut().set_property(name, prop);
 }
 
-pub fn prototypes_init(rt: &mut JsRuntime) {
+pub fn prototypes_init<T:Expandable>(rt: &mut JsRuntime<T>) {
     // Object
     let (top_class, top_prototype) = create_builtin_class(rt, JsBuiltinFunction::new(object_constructor, 1), object_proto_builtins(), None);
     create_class_functions(rt, top_class.clone(), object_builtins());
@@ -268,9 +268,9 @@ pub fn prototypes_init(rt: &mut JsRuntime) {
     rt.prototypes.exception_prototype = exp_prototype;
 }
 
-pub fn builtin_init(runtime: &mut JsRuntime) {
+pub fn builtin_init<T:Expandable>(runtime: &mut JsRuntime<T>) {
     // global functions for runtime 
-    fn assert(rt: &mut JsRuntime) {    
+    fn assert<T:Expandable>(rt: &mut JsRuntime<T>) {    
         let b = rt.top(-2).to_boolean();
         if !b {
             let info = rt.top(-1).to_string();
@@ -279,7 +279,7 @@ pub fn builtin_init(runtime: &mut JsRuntime) {
         rt.push_undefined();
     }
 
-    fn println(rt: &mut JsRuntime) {
+    fn println<T:Expandable>(rt: &mut JsRuntime<T>) {
         let info = rt.to_string( rt.top(-1) );
         if let Ok(msg) = info {
             println!("{}", msg);

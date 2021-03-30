@@ -68,9 +68,9 @@ impl JsEnvironment {
 	}
 }
 
-impl JsRuntime {
+impl<T: Expandable> JsRuntime<T> {
 	/* builtins */
-	pub fn new_builtin(&mut self, bf: JsBuiltinFunction) -> JsObject {
+	pub fn new_builtin(&mut self, bf: JsBuiltinFunction<T>) -> JsObject {
 		let fid = self.builtins.len();
 		self.builtins.push(bf);
 		JsObject {
@@ -771,9 +771,7 @@ impl JsRuntime {
 	
 }
 
-
-
-fn jsrun(rt: &mut JsRuntime, func: &VMFunction, pc: usize) -> Result<(), JsException> {
+fn jsrun<T: Expandable>(rt: &mut JsRuntime<T>, func: &VMFunction, pc: usize) -> Result<(), JsException> {
 	assert!(rt.stack.len() > 0);
 	let mut pc:usize = pc;
 	let bot:usize = rt.stack.len() - 1;
@@ -1413,7 +1411,7 @@ fn jsrun(rt: &mut JsRuntime, func: &VMFunction, pc: usize) -> Result<(), JsExcep
 	return Ok(());
 }
 
-fn jscall_script(rt: &mut JsRuntime, argc: usize) -> Result<(), JsException> {
+fn jscall_script<T:Expandable>(rt: &mut JsRuntime<T>, argc: usize) -> Result<(), JsException> {
 	let bot = rt.stack.len() - 1 - argc;
 
 	let fobj = rt.stack[bot-1].get_object();
@@ -1439,7 +1437,7 @@ fn jscall_script(rt: &mut JsRuntime, argc: usize) -> Result<(), JsException> {
 	return Ok(())
 }
 
-fn jscall_function(rt: &mut JsRuntime, argc: usize) -> Result<(), JsException> {	
+fn jscall_function<T: Expandable>(rt: &mut JsRuntime<T>, argc: usize) -> Result<(), JsException> {	
 	let bot = rt.stack.len() - 1 - argc;
 
 	let fobj = rt.stack[bot-1].get_object();
@@ -1502,10 +1500,10 @@ fn jscall_function(rt: &mut JsRuntime, argc: usize) -> Result<(), JsException> {
 	return Ok(());
 }
 
-fn jscall_builtin(rt: &mut JsRuntime, argc: usize) {
+fn jscall_builtin<T: Expandable>(rt: &mut JsRuntime<T>, argc: usize) {
 	let bot = rt.stack.len() - 1 - argc;
 	let fobj = rt.stack[bot-1].get_object();
-	let builtin = rt.builtins[fobj.borrow().get_builtin()];	
+	let builtin = rt.builtins[fobj.borrow().get_builtin()].clone();	
 	
 	if argc > builtin.argc {
 		for _i in builtin.argc .. argc {
@@ -1524,7 +1522,7 @@ fn jscall_builtin(rt: &mut JsRuntime, argc: usize) {
 	rt.push(jv);
 }
 
-pub fn jscall(rt: &mut JsRuntime, argc: usize) -> Result<(), JsException> {
+pub fn jscall<T: Expandable>(rt: &mut JsRuntime<T>, argc: usize) -> Result<(), JsException> {
 	assert!(rt.stack.len() >= argc + 2);
 	let bot = rt.stack.len() - 1 - argc;
 

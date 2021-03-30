@@ -13,6 +13,7 @@ mod builtin;
 pub mod runtime;
 
 use std::convert::TryFrom;
+use std::collections::HashMap;
 use crate::ast::*;
 use crate::bytecode::*;
 use crate::compile::*;
@@ -60,7 +61,7 @@ pub fn dump_function(f: &VMFunction) {
     println!("----------END-----------");
 }
 
-pub fn new_runtime() -> JsRuntime {	
+pub fn new_runtime<T: Expandable>() -> JsRuntime<T> {	
 	let prototypes = JsPrototype {
 		object_prototype:		SharedObject_new(JsObject::new()),
 		string_prototype:		SharedObject_new(JsObject::new()),
@@ -78,6 +79,7 @@ pub fn new_runtime() -> JsRuntime {
 		genv:		genv,
 		cenv:		cenv,
 		stack:		Vec::new(),
+		container:	HashMap::new(),
 	};
 
 	// init prototypes
@@ -87,7 +89,7 @@ pub fn new_runtime() -> JsRuntime {
 	return runtime;
 }
 
-pub fn run_script(rt: &mut JsRuntime, vmf: SharedFunction) -> Result<SharedValue, String> {
+pub fn run_script<T:Expandable>(rt: &mut JsRuntime<T>, vmf: SharedFunction) -> Result<SharedValue, String> {
 	assert!( vmf.script == true);
 	let fobj = SharedObject_new(JsObject::new_function(vmf, rt.genv.clone()));
 	let thiz = rt.genv.borrow().target(); 

@@ -6,9 +6,19 @@ use std::io;
 use std::io::Write;
 use std::time::{SystemTime, UNIX_EPOCH};
 
+#[derive(Clone)]
+struct MyExpander {
+
+}
+
+impl ezjs::runtime::Expandable for MyExpander {
+    fn hash(&self) -> u64 {
+        return 0;
+    }
+}
 
 pub fn main() {
-    let mut rt = ezjs::new_runtime();
+    let mut rt = ezjs::new_runtime::<MyExpander>();
 
     println!("REPL of ezjs v0.1.0");
     let args: Vec<String> = env::args().collect();

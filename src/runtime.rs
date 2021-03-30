@@ -119,26 +119,28 @@ pub struct JsPrototype {
 	pub exception_prototype: SharedObject,
 }
 
-#[allow(non_camel_case_types)]
-#[derive(Copy, Clone)]
-pub struct JsBuiltinFunction {
-	pub f:		fn(&mut JsRuntime),
-	pub argc:	usize,
-}
-
 pub trait Expandable : Sized + Clone {
 	fn hash(&self) -> u64;
 }
 
 #[allow(non_camel_case_types)]
-pub struct JsRuntime {
-	pub builtins:		Vec<JsBuiltinFunction>,
+#[derive(Copy, Clone)]
+pub struct JsBuiltinFunction<T> where T: Expandable {
+	pub f:		fn(&mut JsRuntime<T>),
+	pub argc:	usize,
+}
+
+#[allow(non_camel_case_types)]
+pub struct JsRuntime<T> where T: Expandable  {
+	pub builtins:		Vec<JsBuiltinFunction<T>>,
 	pub prototypes:		JsPrototype,
 
 	pub genv:			SharedScope,	
 	pub cenv:			SharedScope,
 
 	pub stack:			Vec<SharedValue>,
+
+	pub container:		HashMap<u64, T>,
 }
 
 
