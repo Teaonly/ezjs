@@ -12,9 +12,7 @@ struct MyExpander {
 }
 
 impl ezjs::runtime::Expandable for MyExpander {
-    fn hash(&self) -> u64 {
-        return 0;
-    }
+    //
 }
 
 pub fn main() {

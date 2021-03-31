@@ -476,10 +476,13 @@ impl JsObject {
 				"string".to_string()
 			},
 			JsClass::builtin(_) => {
-				"function".to_string()
+				"builtin".to_string()
 			},
 			JsClass::function(_) => {
 				"function".to_string()
+			},
+			JsClass::expand(_) => {
+				"expander".to_string()
 			},
 			_ => {
 				"object".to_string()
@@ -492,6 +495,18 @@ impl JsObject {
 			return true;
 		}
 		return false;
+	}
+	pub fn is_expand(&self) -> bool {
+		if let JsClass::expand(_) = self.value {
+			return true;
+		}
+		return false;
+	}
+	pub fn get_expand(&self) -> JsExpander {
+		if let JsClass::expand(ref expa) = self.value {
+			return expa.clone();
+		}
+		panic!("Object can't be a expand!")
 	}
 	pub fn is_exception(&self) -> bool {
 		if let JsClass::exception(_e) = &self.value {

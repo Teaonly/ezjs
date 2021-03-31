@@ -79,7 +79,9 @@ pub fn new_runtime<T: Expandable>() -> JsRuntime<T> {
 		genv:		genv,
 		cenv:		cenv,
 		stack:		Vec::new(),
-		container:	HashMap::new(),
+
+		expanders:		HashMap::new(),
+		expanders_id:	0,
 	};
 
 	// init prototypes

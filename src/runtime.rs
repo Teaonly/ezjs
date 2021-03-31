@@ -120,7 +120,7 @@ pub struct JsPrototype {
 }
 
 pub trait Expandable : Sized + Clone {
-	fn hash(&self) -> u64;
+	//fn hash(&self) -> u64;
 }
 
 #[allow(non_camel_case_types)]
@@ -140,7 +140,8 @@ pub struct JsRuntime<T> where T: Expandable  {
 
 	pub stack:			Vec<SharedValue>,
 
-	pub container:		HashMap<u64, T>,
+	pub expanders:		HashMap<u64, T>,
+	pub expanders_id:	u64,
 }
 
 

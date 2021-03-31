@@ -69,6 +69,16 @@ impl JsEnvironment {
 }
 
 impl<T: Expandable> JsRuntime<T> {
+	/* expanders */
+	pub fn check_expander_replace(&mut self, v: &SharedValue) {
+		if v.is_object() {
+			if v.get_object().borrow().is_expand() {
+				let eid = v.get_object().borrow().get_expand().ptr;
+				self.expanders.remove(&eid);
+			}
+		}
+	}
+
 	/* builtins */
 	pub fn new_builtin(&mut self, bf: JsBuiltinFunction<T>) -> JsObject {
 		let fid = self.builtins.len();
@@ -80,7 +90,7 @@ impl<T: Expandable> JsRuntime<T> {
 			value: JsClass::builtin(fid),
 		}
 	}
-
+	
 	/* environment's variables */
 	fn delvariable(&mut self, name: &str) -> bool {
 		let mut env: SharedScope = self.cenv.clone();
@@ -121,8 +131,9 @@ impl<T: Expandable> JsRuntime<T> {
 		loop {
 			let r = env.borrow().query_variable(name);
 			if r {
-				let mut prop = env.borrow().get_variable(name);				
-				prop.value.replace( self.top(-1) );
+				let mut prop = env.borrow().get_variable(name);	
+				self.check_expander_replace(&prop.value);			
+				prop.value.replace(self.top(-1));
 				return Ok(());
 			}
 			if env.borrow().outer.is_none() {
@@ -134,7 +145,8 @@ impl<T: Expandable> JsRuntime<T> {
 		
 		let value = self.top(-1);
 		self.cenv.borrow().put_variable(name);
-		let mut prop = self.cenv.borrow().get_variable(name);
+		let mut prop = self.cenv.borrow().get_variable(name);	
+		self.check_expander_replace(&prop.value);	
 		prop.value.replace(value);
 		self.cenv.borrow().set_variable(name, prop);
 
@@ -197,7 +209,8 @@ impl<T: Expandable> JsRuntime<T> {
 				return Ok(());
 			}
 			if prop.writeable() {
-				prop.value.replace( value );
+				self.check_expander_replace(&prop.value);
+				prop.value.replace(value);
 				return Ok(());
 			} else {								
 				println!("Cant write property for specia object!");
