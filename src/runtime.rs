@@ -17,12 +17,12 @@ pub struct JsPrototype {
 	pub exception_prototype: SharedObject,
 }
 
-pub trait Hookable : Sized + Clone {
+pub trait Hookable : Clone + Sized {
 	fn name(&self) -> String;
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Copy, Clone)]
+#[derive(Clone)]
 pub struct JsBuiltinFunction<T> where T: Hookable {
 	pub f:		fn(&mut JsRuntime<T>),
 	pub argc:	usize,
@@ -1507,7 +1507,7 @@ fn jscall_function<T: Hookable>(rt: &mut JsRuntime<T>, argc: usize) -> Result<()
 fn jscall_builtin<T: Hookable>(rt: &mut JsRuntime<T>, argc: usize) {
 	let bot = rt.stack.len() - 1 - argc;
 	let fobj = rt.stack[bot-1].get_object();
-	let builtin = rt.builtins[fobj.borrow().get_builtin()].clone();	
+	let builtin = rt.builtins[fobj.borrow().get_builtin()].clone();
 	
 	if argc > builtin.argc {
 		for _i in builtin.argc .. argc {

@@ -3,40 +3,30 @@ use std::fs;
 use std::io;
 use std::io::Write;
 use std::time::{SystemTime, UNIX_EPOCH};
-use std::cell::RefCell;
-use std::rc::Rc;
 
 use ezjs;
 
-#[derive( Debug)]
-pub struct _MyHook {
-    value:  String,
+#[derive(Clone, Debug)]
+struct MyHook {
+    value: String,
 }
-impl Drop for _MyHook {
-    fn drop(&mut self) {
-        println!(" ###### DROP HOOK ######### {}", self.value);
+impl MyHook {
+    pub fn new(s: String) -> MyHook {        
+        MyHook {
+            value: s
+        }
     }
 }
 
-#[derive(Clone, Debug)]
-pub struct MyHook {
-    _h : Rc<RefCell<_MyHook>>,
-}
-
-impl MyHook {
-    pub fn new(s: String) -> MyHook {
-        let h = _MyHook {
-            value: s,
-        };
-        MyHook {
-            _h: Rc::new(RefCell::new(h)),
-        }
+impl Drop for MyHook {
+    fn drop(&mut self) {
+        println!(" ############## DROP HOOK ########### {:?}", self);
     }
 }
 
 impl ezjs::runtime::Hookable for MyHook {
     fn name(&self) -> String {
-        return self._h.borrow().value.clone();
+        return self.value.clone();
     }
 }
 
