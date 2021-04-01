@@ -579,7 +579,7 @@ impl JsObject {
 				"string".to_string()
 			},
 			JsClass::builtin(_) => {
-				"builtin".to_string()
+				"function".to_string()
 			},
 			JsClass::function(_) => {
 				"function".to_string()
