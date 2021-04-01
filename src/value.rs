@@ -517,15 +517,6 @@ impl JsObject {
         }
 	}
 	
-	pub fn new_expand(ptr: u64) -> JsObject {
-		JsObject {
-			extensible:	false,
-			__proto__: None,
-			properties: HashMap::new(),
-			value: JsClass::hook(ptr),
-		}
-	}
-
 	pub fn new_exception(prototype: SharedObject, e: JsException) -> JsObject {		
 		JsObject {
 			extensible:	false,
@@ -594,14 +585,14 @@ impl JsObject {
 		return false;
 	}
 	pub fn is_hook(&self) -> bool {
-		if let JsClass::hook(_) = self.value {
+		if let JsClass::hook(_) = &self.value {
 			return true;
 		}
 		return false;
 	}
 	pub fn get_hook(&self) -> u64 {
-		if let JsClass::hook(ptr) = self.value {
-			return ptr;
+		if let JsClass::hook(hid) = self.value {
+			return hid;
 		}
 		panic!("Object can't be a hook!")
 	}
@@ -728,7 +719,6 @@ impl JsObject {
 		self.properties.remove(name);
 	}
 }
-
 
 impl JsEnvironment {
 	pub fn new()  -> SharedScope {

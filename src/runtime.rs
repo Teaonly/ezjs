@@ -40,17 +40,18 @@ pub struct JsRuntime<T> where T: Hookable  {
 
 	pub hooks:			HashMap<u64, T>,
 	pub hooks_id:		u64,
+	pub root:			T,
 }
 
 
 /* implementation for JsRuntime and jscall */
-
 impl<T: Hookable> JsRuntime<T> {
 	/* hooks */	
 	pub fn new_hook(&mut self, hook: T) -> JsObject {
 		let hid = self.hooks_id;
 		self.hooks_id = hid + 1;
 		self.hooks.insert(hid, hook);
+
 		JsObject {
 			extensible:	false,
 			__proto__: None,
@@ -60,9 +61,11 @@ impl<T: Hookable> JsRuntime<T> {
 	}
 	fn check_hook_replace(&mut self, v: &SharedValue) {
 		if v.is_object() {
-			if v.get_object().borrow().is_hook() {
-				let hid = v.get_object().borrow().get_hook();
-				self.hooks.remove(&hid);
+			if v.get_object().borrow().is_hook() {				
+				if SharedObject::strong_count(&v.get_object()) == 2 {
+					let hid = v.get_object().borrow().get_hook();
+					self.hooks.remove(&hid);
+				}
 			}
 		}
 	}

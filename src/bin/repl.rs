@@ -8,19 +8,61 @@ use std::rc::Rc;
 
 use ezjs;
 
-#[derive(Clone)]
-struct MyHook {
-    value:  Rc<RefCell<String>>,
+#[derive( Debug)]
+pub struct _MyHook {
+    value:  String,
+}
+impl Drop for _MyHook {
+    fn drop(&mut self) {
+        println!(" ###### DROP HOOK ######### {}", self.value);
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct MyHook {
+    _h : Rc<RefCell<_MyHook>>,
+}
+
+impl MyHook {
+    pub fn new(s: String) -> MyHook {
+        let h = _MyHook {
+            value: s,
+        };
+        MyHook {
+            _h: Rc::new(RefCell::new(h)),
+        }
+    }
 }
 
 impl ezjs::runtime::Hookable for MyHook {
     fn name(&self) -> String {
-        "Hello".to_string()
+        return self._h.borrow().value.clone();
     }
 }
 
+fn new_hook(rt: &mut ezjs::runtime::JsRuntime<MyHook>)  {
+    let value = rt.to_string( rt.top(-1) );
+    if let Ok(msg) = value {
+        let new_hook = rt.new_hook(MyHook::new(msg));
+        rt.push_object( ezjs::value::SharedObject_new(new_hook));         
+        return;
+    } 
+    rt.push_undefined();
+}
+
+fn show_hooks(rt: &mut ezjs::runtime::JsRuntime<MyHook>)  {
+    println!("{:?}", rt.hooks);
+    rt.push_number( rt.hooks.keys().len() as f64);
+}
+
 pub fn main() {
-    let mut rt = ezjs::new_runtime::<MyHook>();
+    let mut rt = ezjs::new_runtime::<MyHook>( MyHook::new("_".to_string()) );
+
+    let fobj = rt.new_builtin(ezjs::runtime::JsBuiltinFunction::new(new_hook, 1));
+    rt.genv.borrow_mut().init_var("new_hook", ezjs::value::SharedValue::new_object(fobj) );
+
+    let fobj = rt.new_builtin(ezjs::runtime::JsBuiltinFunction::new(show_hooks, 0));
+    rt.genv.borrow_mut().init_var("show_hooks", ezjs::value::SharedValue::new_object(fobj) );
 
     println!("REPL of ezjs v0.1.0");
     let args: Vec<String> = env::args().collect();

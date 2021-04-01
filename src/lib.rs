@@ -59,7 +59,7 @@ pub fn dump_function(f: &VMFunction) {
     println!("----------END-----------");
 }
 
-pub fn new_runtime<T: Hookable>() -> JsRuntime<T> {	
+pub fn new_runtime<T: Hookable>(root: T) -> JsRuntime<T> {	
 	let prototypes = JsPrototype {
 		object_prototype:		SharedObject_new(JsObject::new()),
 		string_prototype:		SharedObject_new(JsObject::new()),
@@ -80,6 +80,7 @@ pub fn new_runtime<T: Hookable>() -> JsRuntime<T> {
 
 		hooks:		HashMap::new(),
 		hooks_id:	0,
+		root:		root,
 	};
 
 	// init prototypes
