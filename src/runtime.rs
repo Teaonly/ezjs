@@ -17,19 +17,19 @@ pub struct JsPrototype {
 	pub exception_prototype: SharedObject,
 }
 
-pub trait Expandable : Sized + Clone {
+pub trait Hookable : Sized + Clone {
 	//fn hash(&self) -> u64;
 }
 
 #[allow(non_camel_case_types)]
 #[derive(Copy, Clone)]
-pub struct JsBuiltinFunction<T> where T: Expandable {
+pub struct JsBuiltinFunction<T> where T: Hookable {
 	pub f:		fn(&mut JsRuntime<T>),
 	pub argc:	usize,
 }
 
 #[allow(non_camel_case_types)]
-pub struct JsRuntime<T> where T: Expandable  {
+pub struct JsRuntime<T> where T: Hookable  {
 	pub builtins:		Vec<JsBuiltinFunction<T>>,
 	pub prototypes:		JsPrototype,
 
@@ -38,20 +38,20 @@ pub struct JsRuntime<T> where T: Expandable  {
 
 	pub stack:			Vec<SharedValue>,
 
-	pub expanders:		HashMap<u64, T>,
-	pub expanders_id:	u64,
+	pub hooks:			HashMap<u64, T>,
+	pub hooks_id:		u64,
 }
 
 
 /* implementation for JsRuntime and jscall */
 
-impl<T: Expandable> JsRuntime<T> {
-	/* expanders */
-	pub fn check_expander_replace(&mut self, v: &SharedValue) {
+impl<T: Hookable> JsRuntime<T> {
+	/* hooks */
+	pub fn check_hook_replace(&mut self, v: &SharedValue) {
 		if v.is_object() {
-			if v.get_object().borrow().is_expand() {
-				let eid = v.get_object().borrow().get_expand().ptr;
-				self.expanders.remove(&eid);
+			if v.get_object().borrow().is_hook() {
+				let hid = v.get_object().borrow().get_hook();
+				self.hooks.remove(&hid);
 			}
 		}
 	}
@@ -109,7 +109,7 @@ impl<T: Expandable> JsRuntime<T> {
 			let r = env.borrow().query_variable(name);
 			if r {
 				let mut prop = env.borrow().get_variable(name);	
-				self.check_expander_replace(&prop.value);			
+				self.check_hook_replace(&prop.value);			
 				prop.value.replace(self.top(-1));
 				return Ok(());
 			}
@@ -123,7 +123,7 @@ impl<T: Expandable> JsRuntime<T> {
 		let value = self.top(-1);
 		self.cenv.borrow().put_variable(name);
 		let mut prop = self.cenv.borrow().get_variable(name);	
-		self.check_expander_replace(&prop.value);	
+		self.check_hook_replace(&prop.value);	
 		prop.value.replace(value);
 		self.cenv.borrow().set_variable(name, prop);
 
@@ -186,7 +186,7 @@ impl<T: Expandable> JsRuntime<T> {
 				return Ok(());
 			}
 			if prop.writeable() {
-				self.check_expander_replace(&prop.value);
+				self.check_hook_replace(&prop.value);
 				prop.value.replace(value);
 				return Ok(());
 			} else {								
@@ -761,7 +761,7 @@ impl<T: Expandable> JsRuntime<T> {
 	
 }
 
-fn jsrun<T: Expandable>(rt: &mut JsRuntime<T>, func: &VMFunction, pc: usize) -> Result<(), JsException> {
+fn jsrun<T: Hookable>(rt: &mut JsRuntime<T>, func: &VMFunction, pc: usize) -> Result<(), JsException> {
 	assert!(rt.stack.len() > 0);
 	let mut pc:usize = pc;
 	let bot:usize = rt.stack.len() - 1;
@@ -1401,7 +1401,7 @@ fn jsrun<T: Expandable>(rt: &mut JsRuntime<T>, func: &VMFunction, pc: usize) -> 
 	return Ok(());
 }
 
-fn jscall_script<T:Expandable>(rt: &mut JsRuntime<T>, argc: usize) -> Result<(), JsException> {
+fn jscall_script<T:Hookable>(rt: &mut JsRuntime<T>, argc: usize) -> Result<(), JsException> {
 	let bot = rt.stack.len() - 1 - argc;
 
 	let fobj = rt.stack[bot-1].get_object();
@@ -1427,7 +1427,7 @@ fn jscall_script<T:Expandable>(rt: &mut JsRuntime<T>, argc: usize) -> Result<(),
 	return Ok(())
 }
 
-fn jscall_function<T: Expandable>(rt: &mut JsRuntime<T>, argc: usize) -> Result<(), JsException> {	
+fn jscall_function<T: Hookable>(rt: &mut JsRuntime<T>, argc: usize) -> Result<(), JsException> {	
 	let bot = rt.stack.len() - 1 - argc;
 
 	let fobj = rt.stack[bot-1].get_object();
@@ -1490,7 +1490,7 @@ fn jscall_function<T: Expandable>(rt: &mut JsRuntime<T>, argc: usize) -> Result<
 	return Ok(());
 }
 
-fn jscall_builtin<T: Expandable>(rt: &mut JsRuntime<T>, argc: usize) {
+fn jscall_builtin<T: Hookable>(rt: &mut JsRuntime<T>, argc: usize) {
 	let bot = rt.stack.len() - 1 - argc;
 	let fobj = rt.stack[bot-1].get_object();
 	let builtin = rt.builtins[fobj.borrow().get_builtin()].clone();	
@@ -1512,7 +1512,7 @@ fn jscall_builtin<T: Expandable>(rt: &mut JsRuntime<T>, argc: usize) {
 	rt.push(jv);
 }
 
-pub fn jscall<T: Expandable>(rt: &mut JsRuntime<T>, argc: usize) -> Result<(), JsException> {
+pub fn jscall<T: Hookable>(rt: &mut JsRuntime<T>, argc: usize) -> Result<(), JsException> {
 	assert!(rt.stack.len() >= argc + 2);
 	let bot = rt.stack.len() - 1 - argc;
 

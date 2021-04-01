@@ -62,15 +62,9 @@ pub struct JsException {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Clone)]
-pub struct JsExpander {
-	pub ptr: u64,
-}
-
-#[allow(non_camel_case_types)]
 pub enum JsClass {
 	object,
-	expand(JsExpander),
+	hook(u64),
 	exception(JsException),
 	iterator(JsIterator),
 	string(String),
@@ -528,7 +522,7 @@ impl JsObject {
 			extensible:	false,
 			__proto__: None,
 			properties: HashMap::new(),
-			value: JsClass::expand(JsExpander{ptr: ptr}),
+			value: JsClass::hook(ptr),
 		}
 	}
 
@@ -584,8 +578,8 @@ impl JsObject {
 			JsClass::function(_) => {
 				"function".to_string()
 			},
-			JsClass::expand(_) => {
-				"expander".to_string()
+			JsClass::hook(_) => {
+				"hook".to_string()
 			},
 			_ => {
 				"object".to_string()
@@ -599,17 +593,17 @@ impl JsObject {
 		}
 		return false;
 	}
-	pub fn is_expand(&self) -> bool {
-		if let JsClass::expand(_) = self.value {
+	pub fn is_hook(&self) -> bool {
+		if let JsClass::hook(_) = self.value {
 			return true;
 		}
 		return false;
 	}
-	pub fn get_expand(&self) -> JsExpander {
-		if let JsClass::expand(ref expa) = self.value {
-			return expa.clone();
+	pub fn get_hook(&self) -> u64 {
+		if let JsClass::hook(ptr) = self.value {
+			return ptr;
 		}
-		panic!("Object can't be a expand!")
+		panic!("Object can't be a hook!")
 	}
 	pub fn is_exception(&self) -> bool {
 		if let JsClass::exception(_e) = &self.value {

@@ -59,7 +59,7 @@ pub fn dump_function(f: &VMFunction) {
     println!("----------END-----------");
 }
 
-pub fn new_runtime<T: Expandable>() -> JsRuntime<T> {	
+pub fn new_runtime<T: Hookable>() -> JsRuntime<T> {	
 	let prototypes = JsPrototype {
 		object_prototype:		SharedObject_new(JsObject::new()),
 		string_prototype:		SharedObject_new(JsObject::new()),
@@ -78,8 +78,8 @@ pub fn new_runtime<T: Expandable>() -> JsRuntime<T> {
 		cenv:		cenv,
 		stack:		Vec::new(),
 
-		expanders:		HashMap::new(),
-		expanders_id:	0,
+		hooks:		HashMap::new(),
+		hooks_id:	0,
 	};
 
 	// init prototypes
@@ -89,7 +89,7 @@ pub fn new_runtime<T: Expandable>() -> JsRuntime<T> {
 	return runtime;
 }
 
-pub fn run_script<T:Expandable>(rt: &mut JsRuntime<T>, vmf: SharedFunction) -> Result<SharedValue, String> {
+pub fn run_script<T:Hookable>(rt: &mut JsRuntime<T>, vmf: SharedFunction) -> Result<SharedValue, String> {
 	assert!( vmf.script == true);
 	let fobj = SharedObject_new(JsObject::new_function(vmf, rt.genv.clone()));
 	let thiz = rt.genv.borrow().target(); 
