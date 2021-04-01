@@ -5,7 +5,110 @@ use std::rc::Rc;
 
 use crate::common::*;
 use crate::bytecode::*;
-use crate::runtime::*;
+
+/* definment for VMFunction/SharedValue/JsValue/JsObject */
+pub type SharedFunction = Rc<Box<VMFunction>>;
+pub type SharedScope = Rc<RefCell<JsEnvironment>>;
+pub type SharedObject = Rc<RefCell<JsObject>>;
+
+#[allow(non_snake_case)]
+pub fn SharedScope_new(scope: JsEnvironment) -> SharedScope {
+	Rc::new(RefCell::new(scope))
+}
+
+#[allow(non_snake_case)]
+pub fn SharedObject_new(obj: JsObject) -> SharedObject {
+	Rc::new(RefCell::new(obj))
+}
+#[allow(non_snake_case)]
+pub fn SharedFunction_new(vmf: VMFunction) -> SharedFunction {
+	Rc::new(Box::new(vmf))
+}
+
+// JsValue for access fast and memory effective 
+// to simpilify implementation remvoed prototype for boolean/number
+#[allow(non_camel_case_types)]
+pub enum JsValue {
+	JSUndefined,
+	JSNULL,
+	JSBoolean(bool),
+	JSNumber(f64),	
+	JSObject(SharedObject),
+}
+
+#[allow(non_camel_case_types)]
+#[derive(Clone)]
+pub struct SharedValue {
+	pub v:	Rc<RefCell<JsValue>>,
+}
+
+#[allow(non_camel_case_types)]
+pub struct JsFunction {	
+	pub vmf:	SharedFunction, 
+	pub scope:	SharedScope,
+}
+
+#[allow(non_camel_case_types)]
+#[derive(Clone)]
+pub struct JsIterator {
+	pub keys:	Vec<String>,
+	pub index:	usize,
+}
+
+#[allow(non_camel_case_types)]
+#[derive(Clone, Debug)]
+pub struct JsException {
+	pub msg:	String,
+}
+
+#[allow(non_camel_case_types)]
+#[derive(Clone)]
+pub struct JsExpander {
+	pub ptr: u64,
+}
+
+#[allow(non_camel_case_types)]
+pub enum JsClass {
+	object,
+	expand(JsExpander),
+	exception(JsException),
+	iterator(JsIterator),
+	string(String),
+	array(Vec<SharedValue>),
+	function(JsFunction),
+	builtin(usize),
+}
+
+#[allow(non_camel_case_types)]
+pub struct JsObject {
+	pub __proto__:	Option<SharedObject>,
+	pub extensible:	bool,
+	pub properties: HashMap<String, JsProperty>,
+	pub value:	JsClass,
+}
+
+#[allow(non_camel_case_types)]
+#[derive(Clone)]
+pub struct JsProperty {
+	pub value:			SharedValue,
+	pub getter:	Option<SharedObject>,
+	pub setter:	Option<SharedObject>,
+
+	// attribute flags
+	pub attr_writable:		bool,
+	pub attr_enumerable: 	bool,
+	pub attr_configurable:	bool,
+}
+
+pub type JsPropertyAttr = (bool, bool, bool);	//writeable, enumerable, configurable 
+pub const JS_DEFAULT_ATTR: JsPropertyAttr = (true, true, true);
+pub const JS_READONLY_ATTR: JsPropertyAttr = (false, false, false);
+
+#[allow(non_camel_case_types)]
+pub struct JsEnvironment {
+	pub variables: SharedObject,		// variables stored in properties 
+	pub outer: Option<SharedScope>,
+}
 
 /* implementation for VMFunction/SharedValue/JsValue/JsObject */
 
@@ -629,5 +732,67 @@ impl JsObject {
 	}
 	pub fn drop_property(&mut self, name: &str) {
 		self.properties.remove(name);
+	}
+}
+
+
+impl JsEnvironment {
+	pub fn new()  -> SharedScope {
+		let env = JsEnvironment {
+			variables: SharedObject_new(JsObject::new()),
+			outer: None,
+		};
+		SharedScope_new(env)
+	}
+	pub fn new_from(outer: SharedScope) -> SharedScope {
+		let env = JsEnvironment {
+			variables: SharedObject_new(JsObject::new()),
+			outer: Some(outer),
+		};
+		SharedScope_new(env)
+	}
+	pub fn target(&self) -> SharedObject {
+		self.variables.clone()
+	}
+
+	pub fn init_var(&mut self, name: &str, jv: SharedValue) {
+		let mut prop = JsProperty::new();
+		prop.fill(jv, JS_DEFAULT_ATTR, None, None);
+		
+		if self.variables.borrow_mut().put_property(name) {
+			self.variables.borrow_mut().set_property(name, prop);
+		}
+	}
+
+	pub fn fetch_outer(&self) -> SharedScope {
+		if let Some(scope) = &self.outer {
+			return scope.clone();
+		}
+		panic!("Can't fetch outer from env!")
+	}
+	
+	pub fn query_variable(&self, name: &str) -> bool {
+		if let Some((_rprop, own)) = self.variables.borrow().query_property(name) {
+			if own {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	pub fn get_variable(&self, name: &str) -> JsProperty {
+		self.variables.borrow().get_property(name)
+	}
+
+	pub fn put_variable(&self, name: &str) {
+		self.variables.borrow_mut().put_property(name);
+	}
+
+	pub fn set_variable(&self, name: &str, prop: JsProperty) {
+		self.variables.borrow_mut().set_property(name, prop);
+	}
+
+	pub fn drop_variable(&self, name: &str) {
+		self.variables.borrow_mut().drop_property(name);
 	}
 }

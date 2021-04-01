@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use crate::bytecode::*;
+use crate::value::*;
 use crate::runtime::*;
 
 impl<T:Expandable> JsBuiltinFunction<T> {

@@ -6,11 +6,9 @@ mod bytecode;
 mod compile;
 mod optimizer;
 
-mod value;
-mod execute;
-mod builtin;
-
+pub mod value;
 pub mod runtime;
+mod builtin;
 
 use std::convert::TryFrom;
 use std::collections::HashMap;
@@ -18,8 +16,8 @@ use crate::ast::*;
 use crate::bytecode::*;
 use crate::compile::*;
 
+use crate::value::*;
 use crate::runtime::*;
-use crate::execute::*;
 use crate::builtin::*;
 
 pub fn build_function_from_code(script: &str) -> Result<SharedFunction, String> {
