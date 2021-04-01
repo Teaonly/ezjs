@@ -1,18 +1,22 @@
-use ezjs;
-
 use std::env;
 use std::fs;
 use std::io;
 use std::io::Write;
 use std::time::{SystemTime, UNIX_EPOCH};
+use std::cell::RefCell;
+use std::rc::Rc;
+
+use ezjs;
 
 #[derive(Clone)]
 struct MyHook {
-
+    value:  Rc<RefCell<String>>,
 }
 
 impl ezjs::runtime::Hookable for MyHook {
-    //
+    fn name(&self) -> String {
+        "Hello".to_string()
+    }
 }
 
 pub fn main() {

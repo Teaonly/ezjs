@@ -18,7 +18,7 @@ pub struct JsPrototype {
 }
 
 pub trait Hookable : Sized + Clone {
-	//fn hash(&self) -> u64;
+	fn name(&self) -> String;
 }
 
 #[allow(non_camel_case_types)]
@@ -46,8 +46,19 @@ pub struct JsRuntime<T> where T: Hookable  {
 /* implementation for JsRuntime and jscall */
 
 impl<T: Hookable> JsRuntime<T> {
-	/* hooks */
-	pub fn check_hook_replace(&mut self, v: &SharedValue) {
+	/* hooks */	
+	pub fn new_hook(&mut self, hook: T) -> JsObject {
+		let hid = self.hooks_id;
+		self.hooks_id = hid + 1;
+		self.hooks.insert(hid, hook);
+		JsObject {
+			extensible:	false,
+			__proto__: None,
+			properties: HashMap::new(),
+			value: JsClass::hook(hid),
+		}	
+	}
+	fn check_hook_replace(&mut self, v: &SharedValue) {
 		if v.is_object() {
 			if v.get_object().borrow().is_hook() {
 				let hid = v.get_object().borrow().get_hook();

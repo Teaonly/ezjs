@@ -55,8 +55,6 @@ fn object_setprototypeof<T: Hookable>(rt: &mut JsRuntime<T>) {
 fn object_proto_builtins<T: Hookable>() -> HashMap<String, JsBuiltinFunction<T>> {
     let mut builtins = HashMap::new();
     builtins.insert("toString".to_string(), JsBuiltinFunction::new(object_tostring, 0));
-    //builtins.insert("preventExtensions".to_string(), JsBuiltinFunction::new(object_preventextensions, 1));
-    //builtins.insert("setPrototypeOf".to_string(), JsBuiltinFunction::new(object_setprototypeof, 2));
     return builtins;
 }
 
