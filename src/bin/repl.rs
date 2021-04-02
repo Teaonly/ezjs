@@ -31,13 +31,9 @@ impl ezjs::runtime::Hookable for MyHook {
 }
 
 fn new_hook(rt: &mut ezjs::runtime::JsRuntime<MyHook>)  {
-    let value = rt.to_string( rt.top(-1) );
-    if let Ok(msg) = value {
-        let new_hook = rt.new_hook(MyHook::new(msg));
-        rt.push_object( ezjs::value::SharedObject_new(new_hook));         
-        return;
-    } 
-    rt.push_undefined();
+    let value = rt.top(-1).to_string();
+    let new_hook = rt.new_hook(MyHook::new(value));
+    rt.push_object( ezjs::value::SharedObject_new(new_hook));             
 }
 
 fn show_hooks(rt: &mut ezjs::runtime::JsRuntime<MyHook>)  {

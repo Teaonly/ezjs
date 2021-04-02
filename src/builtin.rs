@@ -279,7 +279,7 @@ pub fn builtin_init<T:Hookable>(runtime: &mut JsRuntime<T>) {
     }
 
     fn println<T:Hookable>(rt: &mut JsRuntime<T>) {
-        let info = rt.to_string( rt.top(-1) );
+        let info = rt.exec_to_string( rt.top(-1) );
         if let Ok(msg) = info {
             println!("{}", msg);
             rt.push_undefined();

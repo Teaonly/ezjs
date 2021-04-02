@@ -485,7 +485,7 @@ impl<T: Hookable> JsRuntime<T> {
 			return Ok(());
 		}
 
-		let propstr = self.to_string(x)?;
+		let propstr = x.to_string();
 		if let Some((_prop, _own)) = y.get_object().borrow().query_property(&propstr) {
 			self.push_boolean(true);
 			return Ok(());
@@ -552,7 +552,7 @@ impl<T: Hookable> JsRuntime<T> {
 	}
 
 	/* convert object to string */
-	pub fn to_string(&mut self, target: SharedValue) -> Result<String, JsException> {
+	pub fn exec_to_string(&mut self, target: SharedValue) -> Result<String, JsException> {
 		
 		/* try to executing toString() */
 		if target.is_object() {
@@ -924,12 +924,7 @@ fn jsrun<T: Hookable>(rt: &mut JsRuntime<T>, func: &VMFunction, pc: usize) -> Re
 			
 			OpcodeType::OP_INITPROP => {
 				let target = rt.top(-3).get_object();
-				let name = match rt.to_string( rt.top(-2)) {
-					Ok(s) => s,
-					Err(e) => {						
-						handle_exception!(e);
-					}
-				};
+				let name = rt.top(-2).to_string();
 				let value = rt.top(-1);
 				if let Err(e) = rt.setproperty(target, &name, value) {
 					handle_exception!(e);
@@ -938,12 +933,7 @@ fn jsrun<T: Hookable>(rt: &mut JsRuntime<T>, func: &VMFunction, pc: usize) -> Re
 			},
 			OpcodeType::OP_INITGETTER => {
 				let target = rt.top(-3).get_object();
-				let name = match rt.to_string( rt.top(-2)) {
-					Ok(s) => s,
-					Err(e) => {
-						handle_exception!(e);
-					}
-				};
+				let name = rt.top(-2).to_string();
 				let func = rt.top(-1);
 				if func.is_object() {
 					let result = rt.defproperty(target, &name, SharedValue::new_undefined(), JS_DEFAULT_ATTR, Some(func.get_object()), None);
@@ -957,12 +947,7 @@ fn jsrun<T: Hookable>(rt: &mut JsRuntime<T>, func: &VMFunction, pc: usize) -> Re
 			},
 			OpcodeType::OP_INITSETTER => {
 				let target = rt.top(-3).get_object();
-				let name = match rt.to_string( rt.top(-2)) {
-					Ok(s) => s,
-					Err(e) => {
-						handle_exception!(e);
-					}
-				};
+				let name = rt.top(-2).to_string();
 				let func = rt.top(-1);
 				if func.is_object() {
 					let result = rt.defproperty(target, &name, SharedValue::new_undefined(), JS_DEFAULT_ATTR, None, Some(func.get_object()));
@@ -977,12 +962,7 @@ fn jsrun<T: Hookable>(rt: &mut JsRuntime<T>, func: &VMFunction, pc: usize) -> Re
 
 			OpcodeType::OP_GETPROP => {
 				let target = rt.top(-2).get_object();
-				let name = match rt.to_string( rt.top(-1)) {
-					Ok(s) => s,
-					Err(e) => {
-						handle_exception!(e);
-					}
-				};
+				let name = rt.top(-1).to_string();
 				if let Err(e) = rt.getproperty(target, &name) {
 					handle_exception!(e);
 				}
@@ -1003,7 +983,7 @@ fn jsrun<T: Hookable>(rt: &mut JsRuntime<T>, func: &VMFunction, pc: usize) -> Re
 			},
 			OpcodeType::OP_SETPROP => {
 				let target = rt.top(-3).get_object();
-				let name = rt.to_string( rt.top(-2))?;
+				let name = rt.top(-2).to_string();
 				let value = rt.top(-1);
 				if let Err(e) = rt.setproperty(target, &name, value) {
 					handle_exception!(e);
@@ -1021,12 +1001,7 @@ fn jsrun<T: Hookable>(rt: &mut JsRuntime<T>, func: &VMFunction, pc: usize) -> Re
 			},
 			OpcodeType::OP_DELPROP => {
 				let target = rt.top(-2).get_object();
-				let name = match rt.to_string( rt.top(-1)) {
-					Ok(s) => s,
-					Err(e) => {
-						handle_exception!(e);
-					}
-				};
+				let name = rt.top(-1).to_string();
 				let b = rt.delproperty(target, &name);
 				rt.pop(2);
 				rt.push_boolean(b);
