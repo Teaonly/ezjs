@@ -36,11 +36,10 @@ fn new_hook(rt: &mut ezjs::runtime::JsRuntime<MyHook>)  {
     rt.push_object( ezjs::value::SharedObject_new(new_hook));             
 }
 
-
 fn print_hook(rt: &mut ezjs::runtime::JsRuntime<MyHook>) {
     let value = rt.top(-1);
     let hook = rt.get_hook( &value );
-    println!("#### {:?} ", hook);
+    println!("hook {:?} ", hook);
     rt.push_undefined();
 }
 
@@ -66,9 +65,7 @@ pub fn main() {
     for i in 1..args.len() {
         let content = fs::read_to_string(&args[i]).unwrap();
         let vmf = ezjs::build_function_from_code(&content).unwrap();
-        if args.len() == 2 {
-            ezjs::dump_function(&vmf);
-        }
+        ezjs::dump_function(&vmf);        
         ezjs::run_script(&mut rt, vmf).unwrap();
     }
 
@@ -79,9 +76,11 @@ pub fn main() {
         match io::stdin().read_line(&mut line) {
             Ok(_n) => {
                 if line != "" {
-                    let begin = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis();
                     
                     let vmf = ezjs::build_function_from_code(&line).unwrap();
+                    ezjs::dump_function(&vmf);
+
+                    let begin = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis();
                     let _ret = ezjs::run_script(&mut rt, vmf).unwrap();
                     let end = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis();
 
