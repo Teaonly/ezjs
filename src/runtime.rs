@@ -57,8 +57,16 @@ impl<T: Hookable> JsRuntime<T> {
 			__proto__: None,
 			properties: HashMap::new(),
 			value: JsClass::hook(hid),
-		}	
+		}
 	}
+	pub fn get_hook<'a>(&'a mut self, v: &SharedValue) -> &'a T {
+		let obj = v.get_object();
+		assert!(obj.borrow().is_hook() );
+		let hid = obj.borrow().get_hook();
+
+		return self.hooks.get(&hid).unwrap();		
+	}
+	
 	fn check_hook_replace(&mut self, v: &SharedValue) {
 		if v.is_object() {
 			if v.get_object().borrow().is_hook() {				
