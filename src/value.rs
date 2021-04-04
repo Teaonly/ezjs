@@ -6,7 +6,7 @@ use std::rc::Rc;
 use crate::common::*;
 use crate::bytecode::*;
 
-/* definment for VMFunction/SharedValue/JsValue/JsObject */
+/* definement for VMFunction/SharedValue/JsValue/JsObject */
 pub type SharedFunction = Rc<Box<VMFunction>>;
 pub type SharedScope = Rc<RefCell<JsEnvironment>>;
 pub type SharedObject = Rc<RefCell<JsObject>>;
