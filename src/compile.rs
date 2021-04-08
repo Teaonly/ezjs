@@ -138,6 +138,12 @@ impl VMFunction {
         }
     }
 
+    fn drain(&mut self, n: usize) {
+        for _i in 0..n {
+            self.code.pop();
+        }
+    }
+
     fn emit(&mut self, value: u16) {
         self.code.push(value);
     }
@@ -1102,7 +1108,7 @@ fn compile_assignforin(f: &mut VMFunction, stm: &AstNode) {
     return;
 }
 
-fn compile_stm(f: &mut VMFunction, stm: &AstNode) {
+fn compile_stm(f: &mut VMFunction, stm: &AstNode) -> bool {
     match stm.ast_type {
         AstType::STM_BLOCK => {
             let block = stm.a.as_ref().unwrap();
@@ -1319,17 +1325,22 @@ fn compile_stm(f: &mut VMFunction, stm: &AstNode) {
         _ => {
             compile_exp(f, stm);
             f.emitop(OpcodeType::OP_POP);
+            return true;
         }    
     }
+
+    return false;
 }
 
-fn compile_stmlist(f: &mut VMFunction, lst: &AstNode) {
+fn compile_stmlist(f: &mut VMFunction, lst: &AstNode) -> bool {
     if lst.is_null() {
-        return;
+        return false;
     }
+    let mut last_stm = false;
     for stm in lst.iter() {
-        compile_stm(f, stm);
+        last_stm = compile_stm(f, stm);
     }
+    return last_stm;
 }
 
 pub fn compile_func(name: &AstNode, params: &AstNode, body: &AstNode, script: bool) -> Result<VMFunction, String> {
@@ -1360,9 +1371,15 @@ pub fn compile_func(name: &AstNode, params: &AstNode, body: &AstNode, script: bo
     }
 
     if f.script {
-        f.emitop(OpcodeType::OP_UNDEF);
-        compile_stmlist(&mut f, body);
-        f.emitop(OpcodeType::OP_RETURN);
+        let ret = compile_stmlist(&mut f, body);
+        if ret == true {
+            // removed pop op, return last value of compile_exp();
+            f.drain(1);
+            f.emitop(OpcodeType::OP_RETURN);
+        } else {
+            f.emitop(OpcodeType::OP_UNDEF);
+            f.emitop(OpcodeType::OP_RETURN);
+        }
     } else {
         compile_stmlist(&mut f, body);
         f.emitop(OpcodeType::OP_UNDEF);

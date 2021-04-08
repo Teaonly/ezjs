@@ -78,13 +78,13 @@ pub fn main() {
                 if line != "" {
                     
                     let vmf = ezjs::build_function_from_code(&line).unwrap();
-                    ezjs::dump_function(&vmf);
+                    //ezjs::dump_function(&vmf);
 
                     let begin = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis();
-                    let _ret = ezjs::run_script(&mut rt, vmf).unwrap();
+                    let ret = ezjs::run_script(&mut rt, vmf).unwrap();
                     let end = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis();
 
-                    println!("<{}>", end - begin);
+                    println!("<{}> {}", end - begin, ret.to_string());
                 }
             },
             Err(err) => {
