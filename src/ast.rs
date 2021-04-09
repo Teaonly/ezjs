@@ -327,7 +327,7 @@ fn ast_propassign(tkr: &mut Tokenlizer) -> Result<AstNode, String> {
             let arg = ast_identifier(tkr)?;
             tk_expect(tkr, TokenType::TK_PAREN_RIGHT)?;
             let body = ast_funbody(tkr)?;
-            let exp = AstNode::new_a_b_c(AstType::EXP_PROP_GET, tkr.line(), name, arg, body);
+            let exp = AstNode::new_a_b_c(AstType::EXP_PROP_SET, tkr.line(), name, arg, body);
             return Ok(exp);
         }
     }
