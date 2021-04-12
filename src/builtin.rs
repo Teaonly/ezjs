@@ -23,16 +23,22 @@ fn object_constructor<T: Hookable>(rt: &mut JsRuntime<T>) {
     rt.push( SharedValue::new_vanilla(rt.prototypes.object_prototype.clone()) );
 }
 
+fn object_tostring<T: Hookable>(rt: &mut JsRuntime<T>)  {
+    rt.push_string( "[object]".to_string() );
+}
+
+fn object_proto_builtins<T: Hookable>() -> HashMap<String, JsBuiltinFunction<T>> {
+    let mut builtins = HashMap::new();
+    builtins.insert("toString".to_string(), JsBuiltinFunction::new(object_tostring, 0));
+    return builtins;
+}
+
 fn object_preventextensions<T: Hookable>(rt: &mut JsRuntime<T>) {
     let value = rt.top(-1);
     if value.is_object() {
         value.get_object().borrow_mut().extensible = false;
     }
     rt.push(value);
-}
-
-fn object_tostring<T: Hookable>(rt: &mut JsRuntime<T>)  {
-    rt.push_string( "[object]".to_string() );
 }
 
 fn object_setprototypeof<T: Hookable>(rt: &mut JsRuntime<T>) {
@@ -52,16 +58,95 @@ fn object_setprototypeof<T: Hookable>(rt: &mut JsRuntime<T>) {
     rt.push(target);
 }
 
-fn object_proto_builtins<T: Hookable>() -> HashMap<String, JsBuiltinFunction<T>> {
-    let mut builtins = HashMap::new();
-    builtins.insert("toString".to_string(), JsBuiltinFunction::new(object_tostring, 0));
-    return builtins;
+fn object_defineproperty<T: Hookable>(rt: &mut JsRuntime<T>) {
+    let target = rt.top(-3);
+    if !target.is_object() {
+        rt.push(target);
+        return;
+    }
+    let target_object = target.get_object();
+
+    let name = rt.top(-2);
+    if !name.is_string() {
+        rt.push(target);
+        return;
+    }
+    let name = name.to_string();
+
+    let desc = rt.top(-1);
+    if !desc.is_object() {
+        rt.push(target);
+        return;
+    }
+    let desc_object = desc.get_object();
+
+    let mut configurable = false;    
+    let prop_r = desc_object.borrow().query_property("configurable");
+    if let Some((prop,_)) = prop_r {
+        if prop.value.is_boolean() {
+            configurable = prop.value.to_boolean();
+        }
+    }
+
+    let mut enumerable = false;    
+    let prop_r = desc_object.borrow().query_property("enumerable");
+    if let Some((prop,_)) = prop_r {
+        if prop.value.is_boolean() {
+            enumerable = prop.value.to_boolean();   
+        }
+    }
+
+    let mut writable = false;
+    let prop_r = desc_object.borrow().query_property("writable");
+    if let Some((prop,_)) = prop_r {
+        if prop.value.is_boolean() {
+            writable = prop.value.to_boolean();
+        }
+    }
+
+    let prop_attr : JsPropertyAttr = (writable, enumerable, configurable);
+    let mut value = SharedValue::new_undefined();
+    let mut getter = None;
+    let mut setter = None;
+
+    let prop_r = desc_object.borrow().query_property("value");
+    if let Some((prop, _)) = prop_r {
+        value = prop.value;                
+    } else {
+        let prop_r = desc_object.borrow().query_property("get");
+        if let Some((prop, _)) = prop_r {
+            //getter = Some(prop.value);
+            if prop.value.is_object() {
+                let obj = prop.value.get_object();
+                if obj.borrow().callable() {
+                    getter = Some(obj);
+                }
+            }
+        }        
+        let prop_r = desc_object.borrow().query_property("set");
+        if let Some((prop, _)) = prop_r {
+            //setter = Some(prop.value);
+            if prop.value.is_object() {
+                let obj = prop.value.get_object();
+                if obj.borrow().callable() {
+                    setter = Some(obj);
+                }
+            }
+        }
+    }
+
+    let mut prop = JsProperty::new();
+    prop.fill(value, prop_attr, getter, setter);
+    target_object.borrow_mut().set_property(&name, prop);
+    rt.push(target);
+    return;
 }
 
 fn object_builtins<T:Hookable>() -> HashMap<String, JsBuiltinFunction<T>> {
     let mut builtins = HashMap::new();   
     builtins.insert("preventExtensions".to_string(), JsBuiltinFunction::new(object_preventextensions, 1));
     builtins.insert("setPrototypeOf".to_string(), JsBuiltinFunction::new(object_setprototypeof, 2));
+    builtins.insert("defineProperty".to_string(), JsBuiltinFunction::new(object_defineproperty, 3));
     return builtins;
 }
 

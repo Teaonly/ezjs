@@ -94,7 +94,7 @@ pub struct JsProperty {
 	pub attr_configurable:	bool,
 }
 
-pub type JsPropertyAttr = (bool, bool, bool);	//writeable, enumerable, configurable 
+pub type JsPropertyAttr = (bool, bool, bool);	//writable, enumerable, configurable 
 pub const JS_DEFAULT_ATTR: JsPropertyAttr = (true, true, true);
 pub const JS_READONLY_ATTR: JsPropertyAttr = (false, false, false);
 
