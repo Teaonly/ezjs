@@ -1,14 +1,16 @@
-class Greeter {
-    greeting: string;
+class Shape { 
+   Area:number 
+   
+   constructor(a:number) { 
+      this.Area = a 
+   } 
+} 
+
+class Circle extends Shape { 
+   disp():void { 
+      console.log("Area of the circle:  "+this.Area) 
+   } 
+}
   
-    constructor(message: string) {
-      this.greeting = message;
-    }
-  
-    greet() {
-      return "Hello, " + this.greeting;
-    }
-  }
-  
-  let greeter = new Greeter("world");
-  println(greeter.greet());
+var obj = new Circle(223); 
+obj.disp();

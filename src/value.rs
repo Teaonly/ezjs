@@ -414,6 +414,17 @@ impl SharedValue {
 			JsValue::JSObject(obj) => {
 				if obj.borrow().is_string() {
 					return obj.borrow().get_string();
+				} else if obj.borrow().is_array() {
+					let obj_ = obj.borrow();
+					let mut result = String::new();
+					let v = obj_.get_array();
+					for i in 0..v.len() {        
+						result.push_str( &v[i].to_string() );
+						if i != v.len() - 1 {
+							result.push_str(", ");
+						}
+					}
+					return result;
 				} else {
 					return format!("[object:_{}_]", obj.borrow().type_string());
 				}
