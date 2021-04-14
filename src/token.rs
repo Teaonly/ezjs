@@ -178,7 +178,7 @@ fn next_general_token (script: &str, cursor: usize) -> Result<(GeneralToken, usi
             return ct::CT_NEWLN;
         }
         if ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '%' || ch == '=' || ch == ';' || ch == '\\' || ch == ':'
-            || ch == '&' || ch == '!' || ch == '|' || ch == '^' || ch == ',' || ch == '\'' || ch == '"' || ch == '~'
+            || ch == '&' || ch == '!' || ch == '|' || ch == '^' || ch == ',' || ch == '\'' || ch == '"' || ch == '~' || ch == '?'
             || ch == '<' || ch == '>' || ch == '(' || ch == ')' || ch == '[' || ch == ']' || ch == '{' || ch == '}' {
             return ct::CT_PUNCT;
         }

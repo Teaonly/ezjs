@@ -84,7 +84,7 @@ impl<T: Hookable> JsRuntime<T> {
 		self.builtins.push(bf);
 		JsObject {
 			extensible:	false,
-			__proto__: None,
+			__proto__: Some(self.prototypes.function_prototype.clone()),
 			properties: HashMap::new(),
 			value: JsClass::builtin(fid),
 		}
