@@ -192,7 +192,7 @@ function test_delete()
     try {
         delete null.a;
     } catch(e) {
-        err = (e instanceof Exception);
+        err = (e instanceof Error);
     }
     assert(err == true, "delete");
 

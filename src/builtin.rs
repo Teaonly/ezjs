@@ -311,7 +311,7 @@ pub fn prototypes_init<T:Hookable>(rt: &mut JsRuntime<T>) {
     
     // Exception
     let (exp_classs_object, exp_prototype) = create_builtin_class(rt, JsBuiltinFunction::new(exception_constructor, 1), exception_proto_builtins(), Some(top_prototype.clone()));
-    set_global_class(rt, "Exception", exp_classs_object.clone());
+    set_global_class(rt, "Error", exp_classs_object.clone());
     rt.prototypes.exception_prototype = exp_prototype;
 }
 

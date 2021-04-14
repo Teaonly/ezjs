@@ -204,7 +204,7 @@ function test_switch2()
 function test_try_catch1()
 {
     try {
-        throw Exception("Hello");
+        throw Error("Hello");
     } catch (e) {
         assert(e.message() == "Hello", "catch 1");
         return;
@@ -249,7 +249,7 @@ function test_try_catch4()
     s = "";
     try {
         s += "t";
-        throw Exception("c");
+        throw Error("c");
     } catch (e) {
         s += e.message();
     } finally {
@@ -303,7 +303,7 @@ function test_try_catch7()
     try {
         try {
             s += "t";
-            throw Exception("a");
+            throw Error("a");
         } finally {
             s += "f";
         }
@@ -324,7 +324,7 @@ function test_try_catch8()
     for(var i in {x:1, y:2}) {
         try {
             s += i;
-            throw Exception("a");
+            throw Error("a");
         } catch (e) {
             s += e.message();
         } finally {
