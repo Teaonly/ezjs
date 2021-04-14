@@ -65,7 +65,7 @@ function test_closure1()
     r = obj.get();
     assert(r == 10, "closure 2");
 
-    println("-------- END TESTING -----------");
+    console.log("-------- END TESTING -----------");
 }
 
 function test_closure2()
@@ -84,7 +84,7 @@ function test_closure2()
     r = expr_func(1);
     assert(r == 0, "expr_func");
 
-    println("-------- END TESTING -----------");
+    console.log("-------- END TESTING -----------");
 }
 
 function test_closure3()
@@ -114,7 +114,7 @@ function test_closure3()
     assert(fib(6) == 8, "fib");
     assert(fib_func(6) == 8, "fib_func");
 
-    println("-------- END TESTING -----------");
+    console.log("-------- END TESTING -----------");
 }
 
 test_closure1();

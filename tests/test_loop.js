@@ -9,7 +9,7 @@ function test_while()
     }
     assert(c === 3, "while 1");
 
-    println("-------- END TESTING -----------");
+    console.log("-------- END TESTING -----------");
 }
 
 function test_while_break()
@@ -25,7 +25,7 @@ function test_while_break()
     }
     assert(c === 2 && i === 1, "while break 1");
 
-    println("-------- END TESTING -----------");
+    console.log("-------- END TESTING -----------");
 }
 
 function test_do_while()
@@ -39,7 +39,7 @@ function test_do_while()
     } while (i < 3);
     assert(c === 3 && i === 3, "do while 1");
 
-    println("-------- END TESTING -----------");
+    console.log("-------- END TESTING -----------");
 }
 
 function test_for()
@@ -57,7 +57,7 @@ function test_for()
     }
     assert(c === 3 && j === 3, "for 2");
 
-    println("-------- END TESTING -----------");
+    console.log("-------- END TESTING -----------");
 }
 
 function test_for_in()
@@ -109,7 +109,7 @@ function test_for_in()
     }
     assert(tab.toString() == "x, y" || tab.toString() == "y, x", "for_in 3");
 
-    println("-------- END TESTING -----------");
+    console.log("-------- END TESTING -----------");
 }
 
 function test_for_in2()
@@ -131,7 +131,7 @@ function test_for_in2()
     }
     assert(tab.toString() == "x, y" || tab.toString() == "y, x" || tab.toString() == "y" || tab.toString() == "x" || tab.toString() == "" , "for in 2");
 
-    println("-------- END TESTING -----------");
+    console.log("-------- END TESTING -----------");
 }
 
 function test_for_break()
@@ -148,7 +148,7 @@ function test_for_break()
     }
     assert(c === 2 && i === 1, "for break");
 
-    println("-------- END TESTING -----------");
+    console.log("-------- END TESTING -----------");
 }
 
 function test_switch1()
@@ -172,7 +172,7 @@ function test_switch1()
     }
     assert(s === "abc" && i === 3, "switch 1");
 
-    println("-------- END TESTING -----------");
+    console.log("-------- END TESTING -----------");
 }
 
 function test_switch2()
@@ -198,7 +198,7 @@ function test_switch2()
     }
     assert(s === "ab3" && i === 4, "switch 2");
 
-    println("-------- END TESTING -----------");
+    console.log("-------- END TESTING -----------");
 }
 
 function test_try_catch1()
@@ -211,7 +211,7 @@ function test_try_catch1()
     }
     assert(false, "catch 2");
 
-    println("-------- END TESTING -----------");
+    console.log("-------- END TESTING -----------");
 }
 
 function test_try_catch2()
@@ -224,7 +224,7 @@ function test_try_catch2()
     }
     assert(a ==  1, "catch 3");
 
-    println("-------- END TESTING -----------");
+    console.log("-------- END TESTING -----------");
 }
 
 function test_try_catch3()
@@ -240,7 +240,7 @@ function test_try_catch3()
     }
     assert(s == "tf", "catch 4");
 
-    println("-------- END TESTING -----------");
+    console.log("-------- END TESTING -----------");
 }
 
 function test_try_catch4()
@@ -257,7 +257,7 @@ function test_try_catch4()
     }
     assert(s == "tcf", "catch 5");
 
-    println("-------- END TESTING -----------");
+    console.log("-------- END TESTING -----------");
 }
 
 function test_try_catch5()
@@ -275,7 +275,7 @@ function test_try_catch5()
     }
     assert(s == "tf", "catch 6");
 
-    println("-------- END TESTING -----------");
+    console.log("-------- END TESTING -----------");
 }
 
 function test_try_catch6()
@@ -292,7 +292,7 @@ function test_try_catch6()
     assert(f() == 1, "catch 7");
     assert(s == "tf", "catch 8");
 
-    println("-------- END TESTING -----------");
+    console.log("-------- END TESTING -----------");
 }
 
 function test_try_catch7()
@@ -313,7 +313,7 @@ function test_try_catch7()
         s += "g";
     }
     assert(s == "tfag", "catch 9");
-    println("-------- END TESTING -----------");
+    console.log("-------- END TESTING -----------");
 }
 
 function test_try_catch8()
@@ -332,7 +332,7 @@ function test_try_catch8()
         }
     }
     assert(s == "xafyaf" || s == "yafxaf", "catch 10");    
-    println("-------- END TESTING -----------");
+    console.log("-------- END TESTING -----------");
 }
 
 test_while();

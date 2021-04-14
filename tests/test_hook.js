@@ -11,7 +11,7 @@ function test_hook1() {
     b = null;
     assert( show_hooks() == 0, " show_hooks 3");
 
-    println("-------- END TESTING -----------");
+    console.log("-------- END TESTING -----------");
 }
 
 test_hook1();

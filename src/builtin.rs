@@ -315,6 +315,23 @@ pub fn prototypes_init<T:Hookable>(rt: &mut JsRuntime<T>) {
     rt.prototypes.exception_prototype = exp_prototype;
 }
 
+fn create_console_object<T:Hookable>(runtime: &mut JsRuntime<T>) {
+    fn println<T:Hookable>(rt: &mut JsRuntime<T>) {
+        let msg = rt.top(-1).to_string();
+        println!("{}", msg);
+        rt.push_undefined();        
+    }
+
+    let console_value = SharedValue::new_vanilla(runtime.prototypes.object_prototype.clone());
+
+    let mut prop = JsProperty::new();    
+    let fvalue =  SharedValue::new_object(runtime.new_builtin(JsBuiltinFunction::new(println, 1)));
+    prop.fill(fvalue, JS_DEFAULT_ATTR, None, None);    
+    
+    console_value.get_object().borrow_mut().set_property("log", prop);
+    runtime.genv.borrow_mut().init_var("console", console_value);
+}
+
 pub fn builtin_init<T:Hookable>(runtime: &mut JsRuntime<T>) {
     // global functions for runtime 
     fn assert<T:Hookable>(rt: &mut JsRuntime<T>) {    
@@ -325,18 +342,12 @@ pub fn builtin_init<T:Hookable>(runtime: &mut JsRuntime<T>) {
         }
         rt.push_undefined();
     }
-
-    fn println<T:Hookable>(rt: &mut JsRuntime<T>) {
-        let msg = rt.top(-1).to_string();
-        println!("{}", msg);
-        rt.push_undefined();        
-    }
     // TODO : isFinite() isNaN() parseFloat() parseInt()
-
+    
     // register some basic builtin functions
     let fobj = runtime.new_builtin(JsBuiltinFunction::new(assert, 2));
     runtime.genv.borrow_mut().init_var("assert", SharedValue::new_object(fobj) );
 
-    let fobj = runtime.new_builtin(JsBuiltinFunction::new(println, 1));
-    runtime.genv.borrow_mut().init_var("println", SharedValue::new_object(fobj));
+    // register some basic runtime objects
+    create_console_object(runtime);
 }

@@ -65,7 +65,7 @@ function test_op1()
 
     assert(('b' > 'a') == true, "('b' > 'a') === true");
 
-    println("-------- END TESTING -----------");
+    console.log("-------- END TESTING -----------");
 }
 
 function test_cvt()
@@ -94,7 +94,7 @@ function test_cvt()
     // assert(((4294967296 * 3 - 4) | 0) === -4);
     // assert(((4294967296 * 3 - 4) >>> 0) === (4294967296 - 4));
 
-    println("-------- END TESTING -----------");
+    console.log("-------- END TESTING -----------");
 }
 
 function test_inc_dec()
@@ -146,7 +146,7 @@ function test_inc_dec()
     a[0]--;
     assert(r === 0 && a[0] === -1, "--5");
 
-    println("-------- END TESTING -----------");
+    console.log("-------- END TESTING -----------");
 }
 
 function test_op2()
@@ -176,7 +176,7 @@ function test_op2()
     assert((typeof null) == "object", "typeof 3");
     assert((typeof unknown_var) == "undefined", "typeof 4");
 
-    println("-------- END TESTING -----------");
+    console.log("-------- END TESTING -----------");
 }
 
 function test_delete()
@@ -196,7 +196,7 @@ function test_delete()
     }
     assert(err == true, "delete");
 
-    println("-------- END TESTING -----------");
+    console.log("-------- END TESTING -----------");
 }
 
 function test_arguments()
@@ -210,7 +210,7 @@ function test_arguments()
 
     assert(f2.prototype.constructor === f2, "prototype");
 
-    println("-------- END TESTING -----------");
+    console.log("-------- END TESTING -----------");
 }
 
 function test_object_literal()
@@ -234,7 +234,7 @@ function test_object_literal()
     assert(b.z == 5678, "object literal 4");
     assert(b.y.y == 4321, "object literal 5");
 
-    println("-------- END TESTING -----------");
+    console.log("-------- END TESTING -----------");
 }
 
 
@@ -246,7 +246,7 @@ function test_labels()
         }
     } while(0);
 
-    println("-------- END TESTING -----------");
+    console.log("-------- END TESTING -----------");
 }
 
 function test_function_expr_name()
@@ -263,7 +263,7 @@ function test_function_expr_name()
         }(3.14);    
     assert(f == 3.14, "function call 2");
 
-    println("-------- END TESTING -----------");
+    console.log("-------- END TESTING -----------");
 }
 
 test_op1();
