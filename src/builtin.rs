@@ -204,9 +204,36 @@ fn function_constructor<T:Hookable>(rt: &mut JsRuntime<T>) {
     rt.push(SharedValue::new_object(fobj));
 }
 
+fn function_apply<T: Hookable>(rt: &mut JsRuntime<T>)  {
+    let func = rt.top(-3);
+    let new_thiz = rt.top(-2);
+    let arguments_object = rt.top(-1);
+
+    let mut arguments: Vec<SharedValue> = Vec::new();
+    if arguments_object.is_object() {
+        let obj_ = arguments_object.get_object();
+        let obj = obj_.borrow();
+
+        let args = obj.get_array();
+        for i in 0..args.len() {
+            arguments.push( args[i].clone());
+        }
+    }
+
+    let argc = arguments.len();
+    rt.push(func);
+    rt.push(new_thiz);
+    for i in 0..arguments.len() {
+        rt.push( arguments[i].clone() );
+    }
+
+    let _ret = jscall(rt, argc);
+}
+
 fn function_proto_builtins<T:Hookable>() -> HashMap<String, JsBuiltinFunction<T>> {
     let mut builtins = HashMap::new();
     builtins.insert("toString".to_string(), JsBuiltinFunction::new(object_tostring, 0));
+    builtins.insert("apply".to_string(), JsBuiltinFunction::new(function_apply, 2));
     return builtins;
 }
 
