@@ -765,10 +765,10 @@ fn jsrun<T: Hookable>(rt: &mut JsRuntime<T>, func: &VMFunction, pc: usize) -> Re
 	let mut pc:usize = pc;
 	let bot:usize = rt.stack.len() - 1;
 
+	let mut with_exception = None;
 	let mut catch_scopes: Vec<(usize, usize)> = Vec::new();
 
-	macro_rules! handle_exception {
-		// `()` indicates that the macro takes no argument.
+	macro_rules! handle_exception {		
 		($e:ident) => {
 			if let Some((new_pc, new_top)) = catch_scopes.pop() {
 				let dropped = rt.stack.len() - new_top;
@@ -778,6 +778,7 @@ fn jsrun<T: Hookable>(rt: &mut JsRuntime<T>, func: &VMFunction, pc: usize) -> Re
 				pc = new_pc;
 				continue;
 			} else {
+				with_exception = Some($e);
 				break;
 			}
 		}
@@ -1372,7 +1373,10 @@ fn jsrun<T: Hookable>(rt: &mut JsRuntime<T>, func: &VMFunction, pc: usize) -> Re
 	}
 
 	// breaked from loop, return to caller
-	return Ok(());
+	if with_exception.is_none() {
+		return Ok(());
+	}
+	return Err( with_exception.unwrap() );
 }
 
 fn jscall_script<T:Hookable>(rt: &mut JsRuntime<T>, argc: usize) -> Result<(), JsException> {
