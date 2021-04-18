@@ -227,7 +227,13 @@ fn function_apply<T: Hookable>(rt: &mut JsRuntime<T>)  {
         rt.push( arguments[i].clone() );
     }
 
-    let _ret = jscall(rt, argc);
+    let ret = jscall(rt, argc);
+    if ret.is_ok() {
+        return;
+    }
+    let exp = ret.err().unwrap();
+
+    panic!(" apply with exception happen! {:?}", exp);
 }
 
 fn function_proto_builtins<T:Hookable>() -> HashMap<String, JsBuiltinFunction<T>> {
