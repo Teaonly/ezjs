@@ -1494,6 +1494,10 @@ pub fn jscall<T: Hookable>(rt: &mut JsRuntime<T>, argc: usize) -> Result<(), JsE
 	assert!(rt.stack.len() >= argc + 2);
 	let bot = rt.stack.len() - 1 - argc;
 
+	if !rt.stack[bot-1].is_object() {
+		return Err( JsException::new("Can't call on none function value".to_string()));
+	}
+
 	let fobj = rt.stack[bot-1].get_object();
 	if fobj.borrow().is_function() == true {
 

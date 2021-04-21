@@ -1,6 +1,6 @@
 
 function test_proto()
-{
+{    
     assert(String.prototype.proto() === Object.prototype, "1111");
 
     var a = {name: 'kaka'};

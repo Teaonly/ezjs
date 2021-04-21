@@ -81,10 +81,14 @@ pub fn main() {
                     //ezjs::dump_function(&vmf);
 
                     let begin = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis();
-                    let ret = ezjs::run_script(&mut rt, vmf).unwrap();
+                    let ret = ezjs::run_script(&mut rt, vmf);
                     let end = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis();
 
-                    println!("<{}> {}", end - begin, ret.to_string());
+                    if ret.is_ok() {
+                        println!("<{}> {}", end - begin, ret.unwrap().to_string());
+                    } else {
+                        println!("{}", ret.err().unwrap().to_string());
+                    }
                 }
             },
             Err(err) => {

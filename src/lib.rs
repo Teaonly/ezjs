@@ -128,8 +128,7 @@ pub fn run_script<T:Hookable>(rt: &mut JsRuntime<T>, vmf: SharedFunction) -> Res
 
 	let result = jscall(rt, 0);
 	if result.is_err() {
-		let err_msg = format!("Exceptions: {:?}", result.err().unwrap());
-		println!("{}", err_msg);
+		let err_msg = format!("Exceptions: {:?}", result.err().unwrap());		
 		rt.stack.clear();
 		return Err(err_msg);
 	}
