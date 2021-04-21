@@ -11,7 +11,7 @@ struct MyHook {
     value: String,
 }
 impl MyHook {
-    pub fn new(s: String) -> MyHook {        
+    pub fn new(s: String) -> MyHook {
         MyHook {
             value: s
         }
@@ -33,7 +33,7 @@ impl ezjs::runtime::Hookable for MyHook {
 fn new_hook(rt: &mut ezjs::runtime::JsRuntime<MyHook>)  {
     let value = rt.top(-1).to_string();
     let new_hook = rt.new_hook(MyHook::new(value));
-    rt.push_object( ezjs::value::SharedObject_new(new_hook));             
+    rt.push_object( ezjs::value::SharedObject_new(new_hook));
 }
 
 fn print_hook(rt: &mut ezjs::runtime::JsRuntime<MyHook>) {
@@ -65,8 +65,12 @@ pub fn main() {
     for i in 1..args.len() {
         let content = fs::read_to_string(&args[i]).unwrap();
         let vmf = ezjs::build_function_from_code(&content).unwrap();
-        ezjs::dump_function(&vmf);        
-        ezjs::run_script(&mut rt, vmf).unwrap();
+        ezjs::dump_function(&vmf);
+        let ret = ezjs::run_script(&mut rt, vmf);
+        if ret.is_err() {
+            println!("{}", ret.err().unwrap().to_string());
+            break;
+        }
     }
 
     loop {
@@ -76,7 +80,7 @@ pub fn main() {
         match io::stdin().read_line(&mut line) {
             Ok(_n) => {
                 if line != "" {
-                    
+
                     let vmf = ezjs::build_function_from_code(&line).unwrap();
                     //ezjs::dump_function(&vmf);
 

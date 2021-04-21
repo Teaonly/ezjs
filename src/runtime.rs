@@ -33,7 +33,7 @@ pub struct JsRuntime<T> where T: Hookable  {
 	pub builtins:		Vec<JsBuiltinFunction<T>>,
 	pub prototypes:		JsPrototype,
 
-	pub genv:			SharedScope,	
+	pub genv:			SharedScope,
 	pub cenv:			SharedScope,
 
 	pub stack:			Vec<SharedValue>,
@@ -46,7 +46,7 @@ pub struct JsRuntime<T> where T: Hookable  {
 
 /* implementation for JsRuntime and jscall */
 impl<T: Hookable> JsRuntime<T> {
-	/* hooks */	
+	/* hooks */
 	pub fn new_hook(&mut self, hook: T) -> JsObject {
 		let hid = self.hooks_id;
 		self.hooks_id = hid + 1;
@@ -64,12 +64,12 @@ impl<T: Hookable> JsRuntime<T> {
 		assert!(obj.borrow().is_hook() );
 		let hid = obj.borrow().get_hook();
 
-		return self.hooks.get(&hid).unwrap();		
+		return self.hooks.get(&hid).unwrap();
 	}
-	
+
 	fn check_hook_replace(&mut self, v: &SharedValue) {
 		if v.is_object() {
-			if v.get_object().borrow().is_hook() {				
+			if v.get_object().borrow().is_hook() {
 				if SharedObject::strong_count(&v.get_object()) == 2 {
 					let hid = v.get_object().borrow().get_hook();
 					self.hooks.remove(&hid);
@@ -89,11 +89,11 @@ impl<T: Hookable> JsRuntime<T> {
 			value: JsClass::builtin(fid),
 		}
 	}
-	
+
 	/* environment's variables */
 	fn delvariable(&mut self, name: &str) -> bool {
 		let mut env: SharedScope = self.cenv.clone();
-		loop {			
+		loop {
 			let r = env.borrow().query_variable(name);
 			if r {
 				env.borrow().drop_variable(name);
@@ -102,24 +102,24 @@ impl<T: Hookable> JsRuntime<T> {
 
 			if env.borrow().outer.is_none() {
 				return false;
-			} 
+			}
 			let r = env.borrow().fetch_outer();
-			env = r; 
+			env = r;
 		}
 	}
-	
+
 	fn getvariable(&mut self, name: &str) -> Result<bool, JsException> {
 		let mut env: SharedScope = self.cenv.clone();
-		loop {			
+		loop {
 			let r = env.borrow().query_variable(name);
 			if r {
-				let prop = env.borrow().get_variable(name);				
+				let prop = env.borrow().get_variable(name);
 				self.push(prop.value.clone());
 				return Ok(true);
 			}
 			if env.borrow().outer.is_none() {
 				return Ok(false);
-			} 
+			}
 			let r = env.borrow().fetch_outer();
 			env = r;
 		}
@@ -130,8 +130,8 @@ impl<T: Hookable> JsRuntime<T> {
 		loop {
 			let r = env.borrow().query_variable(name);
 			if r {
-				let mut prop = env.borrow().get_variable(name);	
-				self.check_hook_replace(&prop.value);			
+				let mut prop = env.borrow().get_variable(name);
+				self.check_hook_replace(&prop.value);
 				prop.value.replace(self.top(-1));
 				return Ok(());
 			}
@@ -141,11 +141,11 @@ impl<T: Hookable> JsRuntime<T> {
 			let r = env.borrow().fetch_outer();
 			env = r;
 		}
-		
+
 		let value = self.top(-1);
 		self.cenv.borrow().put_variable(name);
-		let mut prop = self.cenv.borrow().get_variable(name);	
-		self.check_hook_replace(&prop.value);	
+		let mut prop = self.cenv.borrow().get_variable(name);
+		self.check_hook_replace(&prop.value);
 		prop.value.replace(value);
 		self.cenv.borrow().set_variable(name, prop);
 
@@ -161,7 +161,7 @@ impl<T: Hookable> JsRuntime<T> {
 		// value/setter/getter/attr can't be conflicted
 		if getter.is_some() || setter.is_some() {
 			assert!( value.is_undefined() );
-		}		
+		}
 		if attr.0 == false && value.is_undefined() {
 			assert!( setter.is_some() );
 		}
@@ -198,7 +198,7 @@ impl<T: Hookable> JsRuntime<T> {
 	// change value of the proptery for object
 	fn setproperty(&mut self, target_: SharedObject, name: &str, value: SharedValue) -> Result<(), JsException> {
 		let prop_r = target_.borrow().query_property(name);
-		if let Some((mut prop, _own)) = prop_r {
+		if let Some((mut prop, own)) = prop_r {
 			if let Some(setter) = prop.setter {
 				self.push_object(setter.clone());
 				self.push_object(target_.clone());
@@ -207,32 +207,34 @@ impl<T: Hookable> JsRuntime<T> {
 				self.pop(1);
 				return Ok(());
 			}
-			if prop.writeable() {
-				self.check_hook_replace(&prop.value);
-				prop.value.replace(value);
-				return Ok(());
-			} else {								
-				println!("Cant write property for specia object!");
-				return Err(JsException::new(format!("TODO: {}", line!())));
-			}
-		} 
+            if own {
+                if prop.writeable() {
+                    self.check_hook_replace(&prop.value);
+                    prop.value.replace(value);
+                    return Ok(());
+                } else {
+                    println!("Cant write property for specia object!");
+                    return Err(JsException::new(format!("TODO: {}", line!())));
+                }
+            }
+		}
 
 		/* Property not found on this object, so create one with default attr*/
 		self.defproperty(target_, name, value, JS_DEFAULT_ATTR, None, None)?;
-		return Ok(());	
-	}	
+		return Ok(());
+	}
 
 	// get value from the proptery of object
-	fn getproperty(&mut self, target_: SharedObject, name: &str) -> Result<bool, JsException> {		
+	fn getproperty(&mut self, target_: SharedObject, name: &str) -> Result<bool, JsException> {
 		let target = target_.borrow();
 		let target_ = target_.clone();
 
 		// get value from index
 		match target.value {
-			JsClass::string(ref s) => {				
+			JsClass::string(ref s) => {
 				if let Ok(idx) = name.parse::<usize>() {
 					if idx < s.len() {
-						self.push_string( s[idx..idx+1].to_string() ); 
+						self.push_string( s[idx..idx+1].to_string() );
 						return Ok(true);
 					}
 				}
@@ -246,7 +248,7 @@ impl<T: Hookable> JsRuntime<T> {
 				}
 			},
 			_ => {}
-		}		
+		}
 		let prop_r = target.query_property(name);
 		if let Some((prop, _own)) = prop_r {
 			if let Some(getter) = prop.getter {
@@ -260,8 +262,8 @@ impl<T: Hookable> JsRuntime<T> {
 		}
 		self.push_undefined();
 		return Ok(false);
-	}		
-	fn delproperty(&mut self, target_: SharedObject, name: &str) -> bool {		
+	}
+	fn delproperty(&mut self, target_: SharedObject, name: &str) -> bool {
 		let mut target = target_.borrow_mut();
 
 		match target.value {
@@ -282,7 +284,7 @@ impl<T: Hookable> JsRuntime<T> {
 			}
 		}
 		return false;
-	}	
+	}
 
 	/* item + item */
 	fn concat_add(&mut self) {
@@ -290,14 +292,14 @@ impl<T: Hookable> JsRuntime<T> {
 		let y = self.top(-1);
 		self.pop(2);
 
-		if x.is_number() {			
+		if x.is_number() {
 			let x = x.to_number();
 			let y = y.to_number();
 			self.push_number(x+y);
 			return;
 		}
-		
-		let x = x.to_string();		
+
+		let x = x.to_string();
 		let y = y.to_string();
 
 		self.push_string( x + &y);
@@ -350,7 +352,7 @@ impl<T: Hookable> JsRuntime<T> {
 			}
 			return false;
 		}
-		
+
 		// boolean with boolean
 		if x.is_boolean()  {
 			if y.is_boolean() {
@@ -375,7 +377,7 @@ impl<T: Hookable> JsRuntime<T> {
 				if let Ok(y_num) = y_str.parse::<f64>() {
 					return x_num == y_num;
 				}
-			} 
+			}
 			return false;
 		}
 
@@ -386,13 +388,13 @@ impl<T: Hookable> JsRuntime<T> {
 			return Rc::ptr_eq(&x_obj, &y_obj);
 		}
 		return false;
-		
+
 	}
 
 	fn strict_equal(&mut self) -> bool {
 		let x = self.top(-2);
-		let y = self.top(-1);		
-		
+		let y = self.top(-1);
+
 		// string with others
 		if x.is_string() {
 			let x_str = x.to_string();
@@ -401,7 +403,7 @@ impl<T: Hookable> JsRuntime<T> {
 				if x_str == y_str {
 					return true;
 				}
-			} 
+			}
 			return false;
 		}
 
@@ -409,11 +411,11 @@ impl<T: Hookable> JsRuntime<T> {
 		if x.is_undefined() {
 			if y.is_undefined() {
 				return true;
-			}			
+			}
 			return false;
 		}
 
-		if x.is_null() {			
+		if x.is_null() {
 			if y.is_null() {
 				return true;
 			}
@@ -486,7 +488,7 @@ impl<T: Hookable> JsRuntime<T> {
 		let x = self.top(-2);
 		let y = self.top(-1);
 		self.pop(2);
-		
+
 		if !y.is_object() {
 			println!("in: invalid operand");
 			self.push_boolean(false);
@@ -507,7 +509,7 @@ impl<T: Hookable> JsRuntime<T> {
 		let x = self.top(-2);
 		let y = self.top(-1);
 		self.pop(2);
-		
+
 		if !x.is_object() {
 			self.push_boolean(false);
 			return Ok(());
@@ -528,7 +530,7 @@ impl<T: Hookable> JsRuntime<T> {
 		self.getproperty(y, "prototype")?;
 		let o = self.top(-1);
 		self.pop(1);
-		if !o.is_object() {			
+		if !o.is_object() {
 			println!("instanceof: 'prototype' property is not an object");
 			self.push_boolean(false);
 			return Ok(());
@@ -567,21 +569,21 @@ impl<T: Hookable> JsRuntime<T> {
 		if obj.borrow().is_builtin() {
 			self.push_null();
 			if argc > 0 {
-				self.rot(argc+1);				
+				self.rot(argc+1);
 			}
 			jscall_builtin(self, argc);
 			return Ok(());
 		}
-		
+
 		/* extract the function object's prototype property */
 		self.getproperty(obj, "prototype")?;
-		
+
 		let proto = if self.top(-1).is_object() {
 			self.top(-1).get_object()
 		} else {
 			self.prototypes.object_prototype.clone()
 		};
-		
+
 		self.pop(1);
 
 		/* create a new object with above prototype, and shift it into the 'this' slot */
@@ -590,7 +592,7 @@ impl<T: Hookable> JsRuntime<T> {
 		let nobj = SharedObject_new(nobj);
 		self.push_object(nobj.clone());
 		if argc > 0 {
-			self.rot(argc+1);				
+			self.rot(argc+1);
 		}
 
 		/* call the function */
@@ -606,9 +608,9 @@ impl<T: Hookable> JsRuntime<T> {
 
 	pub fn new_closure(&mut self, f: SharedFunction) {
 		let fobj = SharedObject_new(JsObject::new_function(f.clone(), self.cenv.clone()));
-		fobj.borrow_mut().__proto__ = Some(self.prototypes.function_prototype.clone());		
-		
-		// prototype object self		
+		fobj.borrow_mut().__proto__ = Some(self.prototypes.function_prototype.clone());
+
+		// prototype object self
 		let mut prop = JsProperty::new();
 		prop.fill_attr(JS_READONLY_ATTR);
 		prop.value = SharedValue::new_sobject(fobj.clone());
@@ -616,8 +618,8 @@ impl<T: Hookable> JsRuntime<T> {
     	prototype_obj.extensible = true;
 		prototype_obj.__proto__ = Some(self.prototypes.object_prototype.clone());
 		prototype_obj.properties.insert("constructor".to_string(), prop );
-		
-		// binding prototype to function object 
+
+		// binding prototype to function object
 		let prototype_obj = SharedObject_new(prototype_obj);
 		let mut prop = JsProperty::new();
 		prop.value = SharedValue::new_sobject(prototype_obj.clone());
@@ -629,7 +631,7 @@ impl<T: Hookable> JsRuntime<T> {
 	/* stack operations */
 	pub fn top(&self, offset: isize) -> SharedValue {
 		if offset < 0 {
-			let offset: usize = (self.stack.len() as isize + offset) as usize;			
+			let offset: usize = (self.stack.len() as isize + offset) as usize;
 			return self.stack[offset].clone();
 		}
 		panic!("top access only support negtive offset!")
@@ -659,7 +661,7 @@ impl<T: Hookable> JsRuntime<T> {
 		let jv = SharedValue::new_object(jobj);
 		self.stack.push(jv);
 	}
-	pub fn push_object(&mut self, target: SharedObject) {		
+	pub fn push_object(&mut self, target: SharedObject) {
 		let jv = SharedValue::new_sobject(target);
 		self.stack.push(jv);
 	}
@@ -670,7 +672,7 @@ impl<T: Hookable> JsRuntime<T> {
 		let jv = SharedValue::clone( &self.stack[from] );
 		self.stack.push(jv);
 	}
-	
+
 	/* opcode helper*/
 	fn pop(&mut self, mut n: usize) {
 		if n > self.stack.len() {
@@ -740,7 +742,7 @@ impl<T: Hookable> JsRuntime<T> {
 		}
 		/* A B C -> C */
 		let top = self.stack.len();
-		self.stack[top-3] = self.stack[top-1].clone(); 
+		self.stack[top-3] = self.stack[top-1].clone();
 		self.pop(2);
 	}
 	fn rot2pop1(&mut self) {
@@ -749,7 +751,7 @@ impl<T: Hookable> JsRuntime<T> {
 		}
 		/* A B -> B */
 		let top = self.stack.len();
-		self.stack[top-2] = self.stack[top-1].clone(); 
+		self.stack[top-2] = self.stack[top-1].clone();
 		self.pop(1);
 	}
 
@@ -757,7 +759,7 @@ impl<T: Hookable> JsRuntime<T> {
 		// runtime virtual machine debugger
 		println!("=======>{}", self.stack.len());
 	}
-	
+
 }
 
 fn jsrun<T: Hookable>(rt: &mut JsRuntime<T>, func: &VMFunction, pc: usize) -> Result<(), JsException> {
@@ -768,12 +770,12 @@ fn jsrun<T: Hookable>(rt: &mut JsRuntime<T>, func: &VMFunction, pc: usize) -> Re
 	let mut with_exception = None;
 	let mut catch_scopes: Vec<(usize, usize)> = Vec::new();
 
-	macro_rules! handle_exception {		
+	macro_rules! handle_exception {
 		($e:ident) => {
 			if let Some((new_pc, new_top)) = catch_scopes.pop() {
 				let dropped = rt.stack.len() - new_top;
 				rt.pop(dropped);
-	
+
 				rt.new_exception($e);
 				pc = new_pc;
 				continue;
@@ -860,7 +862,7 @@ fn jsrun<T: Hookable>(rt: &mut JsRuntime<T>, func: &VMFunction, pc: usize) -> Re
 			OpcodeType::OP_CURRENT => {
 				rt.push_from(bot - 1);
 			},
-			
+
 			OpcodeType::OP_GETVAR => {
 				let s = func.string(&mut pc);
 				let result = rt.getvariable(&s);
@@ -892,13 +894,13 @@ fn jsrun<T: Hookable>(rt: &mut JsRuntime<T>, func: &VMFunction, pc: usize) -> Re
 					Err(e) => {
 						e
 					},
-				};				
+				};
 				handle_exception!(excp);
 			},
 			OpcodeType::OP_SETVAR => {
 				let s = func.string(&mut pc);
 				let result = rt.setvariable(s);
-				if let Err(e) = result {					
+				if let Err(e) = result {
 					handle_exception!(e);
 				}
 			},
@@ -907,7 +909,7 @@ fn jsrun<T: Hookable>(rt: &mut JsRuntime<T>, func: &VMFunction, pc: usize) -> Re
 				let r = rt.delvariable(s);
 				rt.push_boolean(r);
 			},
-			
+
 			OpcodeType::OP_INITPROP => {
 				let target = rt.top(-3).get_object();
 				let name = rt.top(-2).to_string();
@@ -957,7 +959,7 @@ fn jsrun<T: Hookable>(rt: &mut JsRuntime<T>, func: &VMFunction, pc: usize) -> Re
 			OpcodeType::OP_GETPROP_S => {
 				let target = rt.top(-1);
 				if !target.is_object() {
-					let e = JsException::new("Access none objects's property!".to_string());					
+					let e = JsException::new("Access none objects's property!".to_string());
 					handle_exception!(e);
 				}
 				let target = target.get_object();
@@ -996,11 +998,11 @@ fn jsrun<T: Hookable>(rt: &mut JsRuntime<T>, func: &VMFunction, pc: usize) -> Re
 				let name = func.string(&mut pc);
 				let target_value = rt.top(-1);
 				if target_value.is_object() {
-					let target = target_value.get_object();				
+					let target = target_value.get_object();
 					let b = rt.delproperty(target, &name);
 					rt.pop(1);
 					rt.push_boolean(b);
-				} else {					
+				} else {
 					let e = JsException::new("Can't delete none object's proptery".to_string());
 					handle_exception!(e);
 				}
@@ -1035,11 +1037,11 @@ fn jsrun<T: Hookable>(rt: &mut JsRuntime<T>, func: &VMFunction, pc: usize) -> Re
 				rt.pop(1);
 				rt.push_boolean(false);
 			},
-			
+
 			/* Function calls */
 			OpcodeType::OP_CALL => {
 				let n = func.int(&mut pc) as usize;
-				if let Err(e) = jscall(rt, n) {					
+				if let Err(e) = jscall(rt, n) {
 					handle_exception!(e);
 				}
 			},
@@ -1100,7 +1102,7 @@ fn jsrun<T: Hookable>(rt: &mut JsRuntime<T>, func: &VMFunction, pc: usize) -> Re
 				rt.push_number(n-1.0);
 				rt.push_number(n);
 			},
-			
+
 			/* Multiplicative operators */
 			OpcodeType::OP_MUL => {
 				let x = rt.top(-2).to_number();
@@ -1135,10 +1137,10 @@ fn jsrun<T: Hookable>(rt: &mut JsRuntime<T>, func: &VMFunction, pc: usize) -> Re
 			/* Shift operators */
 			OpcodeType::OP_SHL => {
 				let x = rt.top(-2).to_number();
-				let y = rt.top(-1).to_number();				
+				let y = rt.top(-1).to_number();
 				rt.pop(2);
 				if x == f64::NAN || y == f64::NAN {
-					rt.push_number(0.0);					
+					rt.push_number(0.0);
 				} else if x == f64::INFINITY || y == f64::INFINITY {
 					rt.push_number(0.0);
 				} else if x == f64::NEG_INFINITY || y == f64::NEG_INFINITY {
@@ -1151,10 +1153,10 @@ fn jsrun<T: Hookable>(rt: &mut JsRuntime<T>, func: &VMFunction, pc: usize) -> Re
 			},
 			OpcodeType::OP_SHR => {
 				let x = rt.top(-2).to_number();
-				let y = rt.top(-1).to_number();				
+				let y = rt.top(-1).to_number();
 				rt.pop(2);
 				if x == f64::NAN || y == f64::NAN {
-					rt.push_number(0.0);					
+					rt.push_number(0.0);
 				} else if x == f64::INFINITY || y == f64::INFINITY {
 					rt.push_number(0.0);
 				} else if x == f64::NEG_INFINITY || y == f64::NEG_INFINITY {
@@ -1162,23 +1164,23 @@ fn jsrun<T: Hookable>(rt: &mut JsRuntime<T>, func: &VMFunction, pc: usize) -> Re
 				} else {
 					let x = x as i64;
 					let y = y as u64;
-					rt.push_number( (x >> (y&0x1F)) as f64);	
+					rt.push_number( (x >> (y&0x1F)) as f64);
 				}
 			},
 			OpcodeType::OP_USHR => {
 				let x = rt.top(-2).to_number();
-				let y = rt.top(-1).to_number();				
+				let y = rt.top(-1).to_number();
 				rt.pop(2);
 				if x == f64::NAN || y == f64::NAN {
-					rt.push_number(0.0);					
+					rt.push_number(0.0);
 				} else if x == f64::INFINITY || y == f64::INFINITY {
 					rt.push_number(0.0);
 				} else if x == f64::NEG_INFINITY || y == f64::NEG_INFINITY {
 					rt.push_number(0.0);
 				} else {
 					let x = x as u64;
-					let y = y as u64;					
-					rt.push_number( (x >> (y&0x1F)) as f64);	
+					let y = y as u64;
+					rt.push_number( (x >> (y&0x1F)) as f64);
 				}
 			},
 
@@ -1251,7 +1253,7 @@ fn jsrun<T: Hookable>(rt: &mut JsRuntime<T>, func: &VMFunction, pc: usize) -> Re
 			/* Binary bitwise operators */
 			OpcodeType::OP_BITAND => {
 				let x = rt.top(-2).to_number();
-				let y = rt.top(-1).to_number();				
+				let y = rt.top(-1).to_number();
 				rt.pop(2);
 				if x == f64::NAN || y == f64::NAN {
 					rt.push_number(0.0);
@@ -1260,7 +1262,7 @@ fn jsrun<T: Hookable>(rt: &mut JsRuntime<T>, func: &VMFunction, pc: usize) -> Re
 				} else if x == f64::NEG_INFINITY || y == f64::NEG_INFINITY {
 					rt.push_number(0.0);
 				} else {
-					rt.push_number( (x as i64 & y as i64) as f64);	
+					rt.push_number( (x as i64 & y as i64) as f64);
 				}
 			},
 			OpcodeType::OP_BITXOR => {
@@ -1274,7 +1276,7 @@ fn jsrun<T: Hookable>(rt: &mut JsRuntime<T>, func: &VMFunction, pc: usize) -> Re
 				} else if x == f64::NEG_INFINITY || y == f64::NEG_INFINITY {
 					rt.push_number(0.0);
 				} else {
-					rt.push_number( (x as i64 ^ y as i64) as f64);	
+					rt.push_number( (x as i64 ^ y as i64) as f64);
 				}
 			},
 			OpcodeType::OP_BITOR => {
@@ -1292,7 +1294,7 @@ fn jsrun<T: Hookable>(rt: &mut JsRuntime<T>, func: &VMFunction, pc: usize) -> Re
 				}
 			},
 
-			/* Try and Catch */	
+			/* Try and Catch */
 			OpcodeType::OP_TRY => {
 				let catch_block = func.address(&mut pc);
 				catch_scopes.push((pc, rt.stack.len()));
@@ -1310,7 +1312,7 @@ fn jsrun<T: Hookable>(rt: &mut JsRuntime<T>, func: &VMFunction, pc: usize) -> Re
 				new_env.borrow_mut().init_var(str, eobj);
 				rt.cenv = new_env;
 			},
-			OpcodeType::OP_ENDCATCH => {				
+			OpcodeType::OP_ENDCATCH => {
 				let outer = rt.cenv.borrow().fetch_outer();
 				rt.cenv = outer;
 			},
@@ -1324,8 +1326,8 @@ fn jsrun<T: Hookable>(rt: &mut JsRuntime<T>, func: &VMFunction, pc: usize) -> Re
 					panic!("Throw a none exception object!");
 				}
 			},
-			
-			/* Branching & Flow control */			
+
+			/* Branching & Flow control */
 			OpcodeType::OP_JCASE => {
 				let offset = func.address(&mut pc);
 				let b = rt.strict_equal();
@@ -1335,7 +1337,7 @@ fn jsrun<T: Hookable>(rt: &mut JsRuntime<T>, func: &VMFunction, pc: usize) -> Re
 				} else {
 					rt.pop(1);
 				}
-			},	
+			},
 			OpcodeType::OP_JUMP => {
 				let addr = func.address(&mut pc);
 				pc = addr;
@@ -1405,7 +1407,7 @@ fn jscall_script<T:Hookable>(rt: &mut JsRuntime<T>, argc: usize) -> Result<(), J
 	return Ok(())
 }
 
-fn jscall_function<T: Hookable>(rt: &mut JsRuntime<T>, argc: usize) -> Result<(), JsException> {	
+fn jscall_function<T: Hookable>(rt: &mut JsRuntime<T>, argc: usize) -> Result<(), JsException> {
 	let bot = rt.stack.len() - 1 - argc;
 
 	let fobj = rt.stack[bot-1].get_object();
@@ -1419,7 +1421,7 @@ fn jscall_function<T: Hookable>(rt: &mut JsRuntime<T>, argc: usize) -> Result<()
 
 	/* create arguments */
 	{
-		let arg_obj = JsObject::new_with( rt.prototypes.object_prototype.clone(), JsClass::object);		
+		let arg_obj = JsObject::new_with( rt.prototypes.object_prototype.clone(), JsClass::object);
 		let arg_value = SharedValue::new_object(arg_obj);
 
 		let jv = SharedValue::new_number(argc as f64);
@@ -1454,7 +1456,7 @@ fn jscall_function<T: Hookable>(rt: &mut JsRuntime<T>, argc: usize) -> Result<()
 		rt.cenv.borrow_mut().init_var(name, rt.stack[bot-1].clone());
 	}
 
-	
+
 	jsrun(rt, vmf, 0)?;
 
 	/* clear stack */
@@ -1472,11 +1474,11 @@ fn jscall_builtin<T: Hookable>(rt: &mut JsRuntime<T>, argc: usize) {
 	let bot = rt.stack.len() - 1 - argc;
 	let fobj = rt.stack[bot-1].get_object();
 	let builtin = rt.builtins[fobj.borrow().get_builtin()].clone();
-	
+
 	if argc > builtin.argc {
 		for _i in builtin.argc .. argc {
 			rt.pop(1);
-		}	
+		}
 	} else if argc < builtin.argc {
 		for _i in argc .. builtin.argc {
 			rt.push_undefined();
@@ -1512,6 +1514,6 @@ pub fn jscall<T: Hookable>(rt: &mut JsRuntime<T>, argc: usize) -> Result<(), JsE
 	} else {
         panic!("Can't call none function object");
 	}
-	
+
 	return Ok(());
 }
