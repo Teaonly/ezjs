@@ -28,9 +28,27 @@ fn object_tostring<T: Hookable>(rt: &mut JsRuntime<T>)  {
     rt.push_string( thiz.to_string());
 }
 
+fn object_proto<T: Hookable>(rt: &mut JsRuntime<T>) {
+    let target = rt.top(-1);
+    if !target.is_object() {
+        rt.push_undefined();    
+        return;
+    }
+
+    let target_object = target.get_object();
+
+    if target_object.borrow().__proto__.is_some() {
+        let proto = target_object.borrow().__proto__.as_ref().unwrap().clone();
+        rt.push_object(proto);
+        return;
+    }
+    rt.push_null();
+}
+
 fn object_proto_builtins<T: Hookable>() -> HashMap<String, JsBuiltinFunction<T>> {
     let mut builtins = HashMap::new();
     builtins.insert("toString".to_string(), JsBuiltinFunction::new(object_tostring, 0));
+    builtins.insert("proto".to_string(), JsBuiltinFunction::new(object_proto, 0));
     return builtins;
 }
 
@@ -147,6 +165,7 @@ fn object_defineproperty<T: Hookable>(rt: &mut JsRuntime<T>) {
 fn object_builtins<T:Hookable>() -> HashMap<String, JsBuiltinFunction<T>> {
     let mut builtins = HashMap::new();   
     builtins.insert("preventExtensions".to_string(), JsBuiltinFunction::new(object_preventextensions, 1));
+    builtins.insert("getPrototypeOf".to_string(), JsBuiltinFunction::new(object_proto, 1));
     builtins.insert("setPrototypeOf".to_string(), JsBuiltinFunction::new(object_setprototypeof, 2));
     builtins.insert("defineProperty".to_string(), JsBuiltinFunction::new(object_defineproperty, 3));
     return builtins;
