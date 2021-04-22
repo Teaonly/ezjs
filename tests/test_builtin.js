@@ -82,5 +82,25 @@ function test_prototype() {
     console.log("-------- END TESTING -----------");
 }
 
+function test_apply() {
+    var OneClass = function() {
+        this.x = "haha";
+    }
+    OneClass.prototype.test = function() {
+        console.log(this.x);
+        return this.x;
+    };
+
+    var a = new OneClass();
+    var b = new OneClass();
+    b.x = "fafa";
+    assert(a.test.apply(a) == "haha",  "apply 1111");
+    assert(a.test.apply(b) == "fafa",  "apply 2222");
+
+    console.log("-------- END TESTING -----------");
+
+}
+
 test_proto();
 test_prototype();
+test_apply();
