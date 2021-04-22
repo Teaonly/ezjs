@@ -1,3 +1,10 @@
+pub fn str_to_integer(symbol: &str) -> Option<u64> {
+	if let Ok(num) = symbol.parse::<u64>() {
+		return Some(num);
+	}
+	return None;
+}
+
 pub fn str_to_number(symbol: &str) -> Option<f64> {
 	if let Ok(v) = symbol.parse::<f64>() {
 		return Some(v);

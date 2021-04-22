@@ -537,6 +537,15 @@ impl JsObject {
 		}
 	}
 
+	pub fn new_array(prototype: SharedObject) -> JsObject {
+		JsObject {
+			extensible:	false,
+			__proto__: Some(prototype),
+			properties: HashMap::new(),
+			value: JsClass::array(Vec::new()),
+		}
+	}
+
 	pub fn new_iterator(target_: SharedObject) -> JsObject {
 		let it = JsIterator::new(target_);
 		JsObject {

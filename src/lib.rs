@@ -20,12 +20,14 @@ mod optimizer;
 pub mod value;
 pub mod runtime;
 mod builtin;
+mod builtin_script;
 
 use std::convert::TryFrom;
 use std::collections::HashMap;
 use crate::ast::*;
 use crate::bytecode::*;
 use crate::compile::*;
+
 
 use crate::value::*;
 use crate::runtime::*;

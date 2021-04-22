@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::rc::Rc;
 use std::cmp;
 
+use crate::common::*;
 use crate::bytecode::*;
 use crate::value::*;
 
@@ -191,12 +192,28 @@ impl<T: Hookable> JsRuntime<T> {
 			target.set_property(name, prop);
 			return Ok(());
 		} else {
-			return Err(JsException::new(format!("TODO: {}", line!())));
+			return Err(JsException::new(format!("runtime TODO: {}", line!())));
 		}
 	}
 
 	// change value of the proptery for object
 	fn setproperty(&mut self, target_: SharedObject, name: &str, value: SharedValue) -> Result<(), JsException> {
+
+		if target_.borrow().is_array() {
+			if let Some(number) = str_to_integer(name) {
+				let number = number as usize;
+				let mut obj = target_.borrow_mut();
+				let array = obj.get_mut_array();
+				if number == array.len() {
+					array.push(value);
+					return Ok(());
+				} else if number < array.len() {
+					array[number] = value;
+					return Ok(());
+				}
+			}
+		}
+
 		let prop_r = target_.borrow().query_property(name);
 		if let Some((mut prop, own)) = prop_r {
 			if let Some(setter) = prop.setter {
@@ -842,9 +859,8 @@ fn jsrun<T: Hookable>(rt: &mut JsRuntime<T>, func: &VMFunction, pc: usize) -> Re
 				let obj = SharedValue::new_vanilla(rt.prototypes.object_prototype.clone());
 				rt.push(obj);
 			},
-			OpcodeType::OP_NEWARRAY => {
-				let a = JsClass::array(Vec::new());
-				let obj = JsObject::new_with(rt.prototypes.array_prototype.clone(), a);
+			OpcodeType::OP_NEWARRAY => {				
+				let obj = JsObject::new_array(rt.prototypes.array_prototype.clone());
 				let jv = SharedValue::new_object(obj);
 				rt.push(jv);
 			},

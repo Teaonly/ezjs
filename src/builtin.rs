@@ -4,6 +4,8 @@ use crate::bytecode::*;
 use crate::value::*;
 use crate::runtime::*;
 
+use crate::builtin_script::*;
+
 impl<T:Hookable> JsBuiltinFunction<T> {
 	pub fn new(f: fn(&mut JsRuntime<T>), argc: usize) -> Self {
 		JsBuiltinFunction {
@@ -188,9 +190,8 @@ fn string_proto_builtins<T:Hookable>() -> HashMap<String, JsBuiltinFunction<T>> 
 }
 
 // The Array class
-fn array_constructor<T:Hookable>(rt: &mut JsRuntime<T>) {
-    let a = JsClass::array(Vec::new());
-    let obj = JsObject::new_with(rt.prototypes.array_prototype.clone(), a);
+fn array_constructor<T:Hookable>(rt: &mut JsRuntime<T>) {    
+    let obj = JsObject::new_array(rt.prototypes.array_prototype.clone());
     let jv = SharedValue::new_object(obj);
     rt.push(jv);
 }
@@ -208,10 +209,21 @@ fn array_push<T:Hookable>(rt: &mut JsRuntime<T>) {
     rt.push_number(object.get_array().len() as f64);
 }
 
+fn array_length<T:Hookable>(rt: &mut JsRuntime<T>) {
+    let target = rt.top(-1);
+    assert!(target.is_object());
+    let sobj = target.get_object();
+    let object = sobj.borrow_mut();
+    assert!(object.is_array());
+   
+    rt.push_number(object.get_array().len() as f64);
+}
+
 fn array_proto_builtins<T:Hookable>() -> HashMap<String, JsBuiltinFunction<T>> {
     let mut builtins = HashMap::new();
     builtins.insert("toString".to_string(), JsBuiltinFunction::new(object_tostring, 0));
     builtins.insert("push".to_string(), JsBuiltinFunction::new(array_push, 1));
+    builtins.insert("__len__".to_string(), JsBuiltinFunction::new(array_length, 0));
     return builtins;
 }
 
@@ -401,4 +413,8 @@ pub fn builtin_init<T:Hookable>(runtime: &mut JsRuntime<T>) {
 
     // register some basic runtime objects
     create_console_object(runtime);
+
+    // executing builtin code before any code.
+    let vmf = crate::build_function_from_code(BUILDIN_SCRIPT).unwrap();    
+    crate::run_script(runtime, vmf).unwrap();
 }
