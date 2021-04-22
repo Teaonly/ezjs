@@ -31,4 +31,56 @@ function test_proto()
     console.log("-------- END TESTING -----------");
 }
 
+// ==================================
+function test_prototype() {
+    var __extends = (this && this.__extends) || (function () {
+        var extendStatics = function (d, b) {
+            return Object.setPrototypeOf(d, b);
+        };
+        return function (d, b) {
+            extendStatics(d, b);
+            function __() {
+                this.constructor = d;
+            }
+            d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+        };
+    })();
+    
+    var Shape = /** @class */ (function () {
+        function Shape(a) {
+            this.Area = a;
+        }
+        return Shape;
+    }());
+    
+    var Circle = (function (_super) {
+        function Circle(a) {
+            this.Area = a;
+        }
+    
+        __extends(Circle, _super);
+        
+        Circle.prototype.disp = function () {
+            console.log("Area of the circle:  " + this.Area);
+        };
+    
+        return Circle;
+    }(Shape));
+
+    var c = new Circle(3.14);
+    assert(c.disp() === undefined, "class 11111");
+    assert(c.proto() === Circle.prototype, "class 22222");
+
+    assert(Circle.proto() === Shape, "class 33333");
+
+    assert(c.constructor === Circle, "class 44444");
+    
+    assert(Circle.prototype.constructor === Circle, "class 55555");
+    assert(Circle.prototype.proto() === Shape.prototype, "class 66666");
+    
+
+    console.log("-------- END TESTING -----------");
+}
+
 test_proto();
+test_prototype();
