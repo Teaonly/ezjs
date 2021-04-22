@@ -242,12 +242,10 @@ impl<T: Hookable> JsRuntime<T> {
 	}
 
 	// get value from the proptery of object
-	fn getproperty(&mut self, target_: SharedObject, name: &str) -> Result<bool, JsException> {
-		let target = target_.borrow();
-		let target_ = target_.clone();
+	fn getproperty(&mut self, target: SharedObject, name: &str) -> Result<bool, JsException> {
 
 		// get value from index
-		match target.value {
+		match target.borrow().value {
 			JsClass::string(ref s) => {
 				if let Ok(idx) = name.parse::<usize>() {
 					if idx < s.len() {
@@ -266,11 +264,11 @@ impl<T: Hookable> JsRuntime<T> {
 			},
 			_ => {}
 		}
-		let prop_r = target.query_property(name);
+		let prop_r = target.borrow().query_property(name);
 		if let Some((prop, _own)) = prop_r {
 			if let Some(getter) = prop.getter {
 				self.push_object(getter.clone());
-				self.push_object(target_);
+				self.push_object(target);
 				jscall(self, 0)?;
 			} else {
 				self.push(prop.value.clone());
@@ -280,7 +278,8 @@ impl<T: Hookable> JsRuntime<T> {
 		self.push_undefined();
 		return Ok(false);
 	}
-	fn delproperty(&mut self, target_: SharedObject, name: &str) -> bool {
+
+    fn delproperty(&mut self, target_: SharedObject, name: &str) -> bool {
 		let mut target = target_.borrow_mut();
 
 		match target.value {
@@ -859,7 +858,7 @@ fn jsrun<T: Hookable>(rt: &mut JsRuntime<T>, func: &VMFunction, pc: usize) -> Re
 				let obj = SharedValue::new_vanilla(rt.prototypes.object_prototype.clone());
 				rt.push(obj);
 			},
-			OpcodeType::OP_NEWARRAY => {				
+			OpcodeType::OP_NEWARRAY => {
 				let obj = JsObject::new_array(rt.prototypes.array_prototype.clone());
 				let jv = SharedValue::new_object(obj);
 				rt.push(jv);

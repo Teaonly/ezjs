@@ -1,6 +1,6 @@
 
 function test_proto()
-{    
+{
     assert(String.prototype.proto() === Object.prototype, "1111");
 
     var a = {name: 'kaka'};
@@ -45,25 +45,25 @@ function test_prototype() {
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    
+
     var Shape = /** @class */ (function () {
         function Shape(a) {
             this.Area = a;
         }
         return Shape;
     }());
-    
+
     var Circle = (function (_super) {
         function Circle(a) {
             this.Area = a;
         }
-    
+
         __extends(Circle, _super);
-        
+
         Circle.prototype.disp = function () {
             console.log("Area of the circle:  " + this.Area);
         };
-    
+
         return Circle;
     }(Shape));
 
@@ -74,10 +74,10 @@ function test_prototype() {
     assert(Circle.proto() === Shape, "class 33333");
 
     assert(c.constructor === Circle, "class 44444");
-    
+
     assert(Circle.prototype.constructor === Circle, "class 55555");
     assert(Circle.prototype.proto() === Shape.prototype, "class 66666");
-    
+
 
     console.log("-------- END TESTING -----------");
 }
