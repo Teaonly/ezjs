@@ -120,7 +120,7 @@ pub fn new_runtime<T: Hookable>(root: T) -> JsRuntime<T> {
 ///
 pub fn run_script<T:Hookable>(rt: &mut JsRuntime<T>, vmf: SharedFunction) -> Result<SharedValue, String> {
 	assert!( vmf.script == true);
-	let fobj = SharedObject_new(JsObject::new_function(vmf, rt.genv.clone()));
+	let fobj = SharedObject_new(JsObject::new_function(vmf, rt.genv.clone(), rt.prototypes.function_prototype.clone()));
 	let thiz = rt.genv.borrow().target(); 
 
 	rt.push_object(fobj);	// function object

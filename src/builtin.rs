@@ -218,8 +218,7 @@ fn array_proto_builtins<T:Hookable>() -> HashMap<String, JsBuiltinFunction<T>> {
 // The Function class
 fn function_constructor<T:Hookable>(rt: &mut JsRuntime<T>) {
     let vmf = SharedFunction_new(VMFunction::new_anonymous());
-    let mut fobj = JsObject::new_function(vmf, rt.cenv.clone());
-    fobj.__proto__ = Some(rt.prototypes.function_prototype.clone());
+    let fobj = JsObject::new_function(vmf, rt.cenv.clone(), rt.prototypes.function_prototype.clone());
     rt.push(SharedValue::new_object(fobj));
 }
 

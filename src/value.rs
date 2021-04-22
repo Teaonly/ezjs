@@ -547,14 +547,14 @@ impl JsObject {
 		}
 	}
 	
-	pub fn new_function(f: SharedFunction, scope: SharedScope) -> JsObject {
+	pub fn new_function(f: SharedFunction, scope: SharedScope, prototype: SharedObject) -> JsObject {
 		let fvalue = JsClass::function(JsFunction {
 			vmf: f,
 			scope: scope,
 		});
 		JsObject {
 			extensible:	false,
-			__proto__: None,
+			__proto__: Some(prototype),
 			properties: HashMap::new(),
 			value: fvalue,
 		}
