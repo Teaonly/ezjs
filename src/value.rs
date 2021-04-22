@@ -25,14 +25,14 @@ pub fn SharedFunction_new(vmf: VMFunction) -> SharedFunction {
 	Rc::new(Box::new(vmf))
 }
 
-// JsValue for access fast and memory effective 
+// JsValue for access fast and memory effective
 // to simpilify implementation remvoed prototype for boolean/number
 #[allow(non_camel_case_types)]
 pub enum JsValue {
 	JSUndefined,
 	JSNULL,
 	JSBoolean(bool),
-	JSNumber(f64),	
+	JSNumber(f64),
 	JSObject(SharedObject),
 }
 
@@ -43,8 +43,8 @@ pub struct SharedValue {
 }
 
 #[allow(non_camel_case_types)]
-pub struct JsFunction {	
-	pub vmf:	SharedFunction, 
+pub struct JsFunction {
+	pub vmf:	SharedFunction,
 	pub scope:	SharedScope,
 }
 
@@ -94,13 +94,13 @@ pub struct JsProperty {
 	pub attr_configurable:	bool,
 }
 
-pub type JsPropertyAttr = (bool, bool, bool);	//writable, enumerable, configurable 
+pub type JsPropertyAttr = (bool, bool, bool);	//writable, enumerable, configurable
 pub const JS_DEFAULT_ATTR: JsPropertyAttr = (true, true, true);
 pub const JS_READONLY_ATTR: JsPropertyAttr = (false, false, false);
 
 #[allow(non_camel_case_types)]
 pub struct JsEnvironment {
-	pub variables: SharedObject,		// variables stored in properties 
+	pub variables: SharedObject,		// variables stored in properties
 	pub outer: Option<SharedScope>,
 }
 
@@ -115,7 +115,7 @@ impl VMFunction {
             numvars: 0,
             code:       Vec::new(),
             num_tab:    Vec::new(),
-            str_tab:    Vec::new(),           
+            str_tab:    Vec::new(),
             func_tab:   Vec::new(),
 
             jumps:      Vec::new(),
@@ -169,7 +169,7 @@ impl VMFunction {
 	}
 	pub fn function(&self, pc:&mut usize) -> SharedFunction {
 		if *pc >= self.code.len() {
-			panic!("fetch function out of code");			
+			panic!("fetch function out of code");
 		}
 		let id = self.code[*pc] as usize;
 		if id > self.func_tab.len() {
@@ -178,7 +178,7 @@ impl VMFunction {
 		*pc = *pc + 1;
 		return self.func_tab[id].clone();
 	}
-	pub fn address(&self, pc:&mut usize) -> usize {		
+	pub fn address(&self, pc:&mut usize) -> usize {
 		let addr = self.code[*pc] as usize + (self.code[*pc+1] as usize) * 65536;
 		*pc = *pc + 2;
 		return addr;
@@ -194,7 +194,7 @@ impl Clone for JsValue {
 			JsValue::JSNumber(n) => JsValue::JSNumber(*n),
 			JsValue::JSObject(obj) => {
 				// only string is primitive
-				if obj.borrow().is_string() {					
+				if obj.borrow().is_string() {
 					JsValue::JSObject(SharedObject_new(obj.borrow().clone_string()))
 				} else {
 					JsValue::JSObject(obj.clone())
@@ -212,7 +212,7 @@ impl JsValue {
 
 impl SharedValue {
 	pub fn replace(&mut self, other: SharedValue) {
-		if self.v.as_ptr() != other.v.as_ptr() {	
+		if self.v.as_ptr() != other.v.as_ptr() {
 			self.v.borrow_mut().copyfrom( &other.v.borrow());
 		}
 	}
@@ -223,7 +223,7 @@ impl SharedValue {
 	}
 
 	pub fn new_null() -> Self {
-		let v = JsValue::JSNULL;		
+		let v = JsValue::JSNULL;
 		SharedValue {
 			v: Rc::new(RefCell::new(v))
 		}
@@ -245,7 +245,7 @@ impl SharedValue {
 		SharedValue {
 			v: Rc::new(RefCell::new(v))
 		}
-	}	
+	}
 	pub fn new_vanilla(proto: SharedObject) -> Self {
 		let shared_obj = SharedObject_new(JsObject::new_with(proto, JsClass::object));
 		let v = JsValue::JSObject(shared_obj);
@@ -347,7 +347,7 @@ impl SharedValue {
 			let s = self.to_string();
 			if let Some(v) = str_to_number(&s) {
 				return v;
-			}			
+			}
 		}
 		if self.is_boolean() {
 			if self.to_boolean() {
@@ -418,7 +418,7 @@ impl SharedValue {
 					let obj_ = obj.borrow();
 					let mut result = String::new();
 					let v = obj_.get_array();
-					for i in 0..v.len() {        
+					for i in 0..v.len() {
 						result.push_str( &v[i].to_string() );
 						if i != v.len() - 1 {
 							result.push_str(", ");
@@ -445,7 +445,7 @@ impl JsProperty {
 			setter: None,
 		}
 	}
-	
+
 	pub fn writeable(&self) -> bool {
 		if self.setter.is_none() {
 			return self.attr_writable;
@@ -457,18 +457,18 @@ impl JsProperty {
 	}
 	pub fn configable(&self) -> bool {
 		return self.attr_configurable;
-	}	
+	}
 	pub fn fill_attr(&mut self, attr: JsPropertyAttr) {
 		if self.attr_configurable {
 			self.attr_writable = attr.0;
 			self.attr_enumerable = attr.1;
 			self.attr_configurable = attr.2;
 		}
-	}	
-	pub fn fill(&mut self, jv: SharedValue, attr: JsPropertyAttr, getter:Option<SharedObject>, setter: Option<SharedObject>) {		
+	}
+	pub fn fill(&mut self, jv: SharedValue, attr: JsPropertyAttr, getter:Option<SharedObject>, setter: Option<SharedObject>) {
 		if self.writeable() {
 			self.value = jv;
-		}		
+		}
 		if self.configable() {
 			self.getter = getter;
 			self.setter = setter;
@@ -488,7 +488,7 @@ impl JsException {
 impl JsIterator {
 	pub fn new(target_: SharedObject) -> Self {
 		let target = target_.borrow();
-	
+
 		let mut keys: Vec<String> = Vec::new();
 		for x in (*target).properties.keys() {
 			if target.properties.get(x).unwrap().enumerable() {
@@ -527,8 +527,8 @@ impl JsObject {
             value: value
         }
 	}
-	
-	pub fn new_exception(prototype: SharedObject, e: JsException) -> JsObject {		
+
+	pub fn new_exception(prototype: SharedObject, e: JsException) -> JsObject {
 		JsObject {
 			extensible:	false,
 			__proto__: Some(prototype),
@@ -555,7 +555,7 @@ impl JsObject {
 			value: JsClass::iterator(it),
 		}
 	}
-	
+
 	pub fn new_function(f: SharedFunction, scope: SharedScope, prototype: SharedObject) -> JsObject {
 		let fvalue = JsClass::function(JsFunction {
 			vmf: f,
@@ -639,13 +639,13 @@ impl JsObject {
 			return it;
 		}
 		panic!("Object can't be a iterator!")
-	}		
+	}
 	pub fn is_builtin(&self) -> bool {
 		if let JsClass::builtin(_) = self.value {
 			return true;
 		}
 		return false;
-	}	
+	}
 	pub fn get_builtin(&self) -> usize {
 		if let JsClass::builtin(fid) = self.value {
 			return fid;
@@ -724,7 +724,7 @@ impl JsObject {
 	pub fn set_property(&mut self, name: &str, prop: JsProperty) {
 		self.properties.insert(name.to_string(), prop);
 	}
-	pub fn put_property(&mut self, name: &str) -> bool {		
+	pub fn put_property(&mut self, name: &str) -> bool {
 		let result = self.properties.get(name);
 		if result.is_some() {
 			return true;
@@ -762,7 +762,7 @@ impl JsEnvironment {
 	pub fn init_var(&mut self, name: &str, jv: SharedValue) {
 		let mut prop = JsProperty::new();
 		prop.fill(jv, JS_DEFAULT_ATTR, None, None);
-		
+
 		if self.variables.borrow_mut().put_property(name) {
 			self.variables.borrow_mut().set_property(name, prop);
 		}
@@ -774,7 +774,7 @@ impl JsEnvironment {
 		}
 		panic!("Can't fetch outer from env!")
 	}
-	
+
 	pub fn query_variable(&self, name: &str) -> bool {
 		if let Some((_rprop, own)) = self.variables.borrow().query_property(name) {
 			if own {

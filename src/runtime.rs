@@ -1435,17 +1435,14 @@ fn jscall_function<T: Hookable>(rt: &mut JsRuntime<T>, argc: usize) -> Result<()
 
 	/* create arguments */
 	{
-		let arg_obj = JsObject::new_with( rt.prototypes.object_prototype.clone(), JsClass::object);
+		let arg_obj = JsObject::new_array( rt.prototypes.array_prototype.clone());
 		let arg_value = SharedValue::new_object(arg_obj);
-
-		let jv = SharedValue::new_number(argc as f64);
-		rt.defproperty(arg_value.get_object(), "length", jv,  JS_READONLY_ATTR, None, None)?;
+        let arg_obj = arg_value.get_object();
 
 		for i in 0..argc {
-			let name = i.to_string();
 			let jv = rt.stack[bot+1+i].clone();
-			rt.defproperty(arg_value.get_object(), &name, jv, JS_DEFAULT_ATTR, None, None)?;
-		}
+	        arg_obj.borrow_mut().get_mut_array().push(jv);
+        }
 
 		arg_value.get_object().borrow_mut().extensible = false;
 		rt.cenv.borrow_mut().init_var("arguments", arg_value);
