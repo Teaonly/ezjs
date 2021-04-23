@@ -101,6 +101,10 @@ function test_apply() {
 
 }
 
+function test_call() {
+    
+}
+
 test_proto();
 test_prototype();
 test_apply();

@@ -265,10 +265,44 @@ fn function_apply<T: Hookable>(rt: &mut JsRuntime<T>, _argc: usize)  {
     panic!(" apply with exception happen! {:?}", exp);
 }
 
+fn function_call<T: Hookable>(rt: &mut JsRuntime<T>, argc: usize)  {
+    if argc == 0 {
+        let ret = jscall(rt, argc);
+        if ret.is_ok() {
+            return;
+        }
+        let exp = ret.err().unwrap();
+        panic!(" apply with exception happen! {:?}", exp);
+    }
+
+    let func = rt.top( -1 - argc as isize);
+    let new_thiz = rt.top( - (argc as isize) );
+
+    let mut arguments: Vec<SharedValue> = Vec::new();
+    for i in (0..argc-1).rev() {        
+        arguments.push( rt.top(-1 - i as isize) );
+    }
+
+    rt.push(func);
+    rt.push(new_thiz);
+    for i in 0..arguments.len() {
+        rt.push( arguments[i].clone() );
+    }
+
+    let ret = jscall(rt, argc - 1);
+    if ret.is_ok() {
+        return;
+    }
+    let exp = ret.err().unwrap();
+
+    panic!(" call with exception happen! {:?}", exp);
+}
+
 fn function_proto_builtins<T:Hookable>() -> HashMap<String, JsBuiltinFunction<T>> {
     let mut builtins = HashMap::new();
     builtins.insert("toString".to_string(), JsBuiltinFunction::new(object_tostring));
     builtins.insert("apply".to_string(), JsBuiltinFunction::new(function_apply));
+    builtins.insert("call".to_string(), JsBuiltinFunction::new(function_call));  
     return builtins;
 }
 
