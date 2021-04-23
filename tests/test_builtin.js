@@ -94,8 +94,8 @@ function test_apply() {
     var a = new OneClass();
     var b = new OneClass();
     b.x = "fafa";
-    assert(a.test.apply(a) == "haha",  "apply 1111");
-    assert(a.test.apply(b) == "fafa",  "apply 2222");
+    assert(a.test.apply(a, []) == "haha",  "apply 1111");
+    assert(a.test.apply(b, []) == "fafa",  "apply 2222");
 
     console.log("-------- END TESTING -----------");
 

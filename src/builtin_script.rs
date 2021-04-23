@@ -3,6 +3,8 @@ pub const BUILDIN_SCRIPT: &str = r#"
         "writable": false,
         "configurable": false,
         "get": function() {
-            return this.__len__(); },
-        });
+            return this.__len__(); 
+        },
+    });
+    
 "#;

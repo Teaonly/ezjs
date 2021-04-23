@@ -7,16 +7,15 @@ use crate::runtime::*;
 use crate::builtin_script::*;
 
 impl<T:Hookable> JsBuiltinFunction<T> {
-	pub fn new(f: fn(&mut JsRuntime<T>), argc: usize) -> Self {
+	pub fn new(f: fn(&mut JsRuntime<T>, usize)) -> Self {
 		JsBuiltinFunction {
-			f:		f,
-			argc:	argc
+			f:	f,
 		}
 	}
 }
 
 // The Object class 
-fn object_constructor<T: Hookable>(rt: &mut JsRuntime<T>) {
+fn object_constructor<T: Hookable>(rt: &mut JsRuntime<T>, _argc: usize) {
     let value = rt.top(-1);
     if value.is_something() {        
         rt.push( value.duplicate() );
@@ -25,12 +24,12 @@ fn object_constructor<T: Hookable>(rt: &mut JsRuntime<T>) {
     rt.push( SharedValue::new_vanilla(rt.prototypes.object_prototype.clone()) );
 }
 
-fn object_tostring<T: Hookable>(rt: &mut JsRuntime<T>)  {
+fn object_tostring<T: Hookable>(rt: &mut JsRuntime<T>, _argc: usize)  {
     let thiz = rt.top(-1);
     rt.push_string( thiz.to_string());
 }
 
-fn object_proto<T: Hookable>(rt: &mut JsRuntime<T>) {
+fn object_proto<T: Hookable>(rt: &mut JsRuntime<T>, _argc: usize) {
     let target = rt.top(-1);
     if !target.is_object() {
         rt.push_undefined();    
@@ -49,12 +48,12 @@ fn object_proto<T: Hookable>(rt: &mut JsRuntime<T>) {
 
 fn object_proto_builtins<T: Hookable>() -> HashMap<String, JsBuiltinFunction<T>> {
     let mut builtins = HashMap::new();
-    builtins.insert("toString".to_string(), JsBuiltinFunction::new(object_tostring, 0));
-    builtins.insert("proto".to_string(), JsBuiltinFunction::new(object_proto, 0));
+    builtins.insert("toString".to_string(), JsBuiltinFunction::new(object_tostring));
+    builtins.insert("proto".to_string(), JsBuiltinFunction::new(object_proto));
     return builtins;
 }
 
-fn object_preventextensions<T: Hookable>(rt: &mut JsRuntime<T>) {
+fn object_preventextensions<T: Hookable>(rt: &mut JsRuntime<T>, _argc: usize) {
     let value = rt.top(-1);
     if value.is_object() {
         value.get_object().borrow_mut().extensible = false;
@@ -62,7 +61,7 @@ fn object_preventextensions<T: Hookable>(rt: &mut JsRuntime<T>) {
     rt.push(value);
 }
 
-fn object_setprototypeof<T: Hookable>(rt: &mut JsRuntime<T>) {
+fn object_setprototypeof<T: Hookable>(rt: &mut JsRuntime<T>, _argc: usize) {
     let target = rt.top(-2);
     if !target.is_object() {
         rt.push_undefined();    
@@ -79,7 +78,7 @@ fn object_setprototypeof<T: Hookable>(rt: &mut JsRuntime<T>) {
     rt.push(target);
 }
 
-fn object_defineproperty<T: Hookable>(rt: &mut JsRuntime<T>) {
+fn object_defineproperty<T: Hookable>(rt: &mut JsRuntime<T>, _argc: usize) {
     let target = rt.top(-3);
     if !target.is_object() {
         rt.push(target);
@@ -166,15 +165,15 @@ fn object_defineproperty<T: Hookable>(rt: &mut JsRuntime<T>) {
 // Object.XXXX not in Object.prototype
 fn object_builtins<T:Hookable>() -> HashMap<String, JsBuiltinFunction<T>> {
     let mut builtins = HashMap::new();   
-    builtins.insert("preventExtensions".to_string(), JsBuiltinFunction::new(object_preventextensions, 1));
-    builtins.insert("getPrototypeOf".to_string(), JsBuiltinFunction::new(object_proto, 1));
-    builtins.insert("setPrototypeOf".to_string(), JsBuiltinFunction::new(object_setprototypeof, 2));
-    builtins.insert("defineProperty".to_string(), JsBuiltinFunction::new(object_defineproperty, 3));
+    builtins.insert("preventExtensions".to_string(), JsBuiltinFunction::new(object_preventextensions));
+    builtins.insert("getPrototypeOf".to_string(), JsBuiltinFunction::new(object_proto));
+    builtins.insert("setPrototypeOf".to_string(), JsBuiltinFunction::new(object_setprototypeof));
+    builtins.insert("defineProperty".to_string(), JsBuiltinFunction::new(object_defineproperty));
     return builtins;
 }
 
 // The String class
-fn string_constructor<T:Hookable>(rt: &mut JsRuntime<T>) {
+fn string_constructor<T:Hookable>(rt: &mut JsRuntime<T>, _argc: usize) {
     let value = rt.top(-1);
     if value.is_string() {
         rt.push(value.duplicate());
@@ -185,18 +184,18 @@ fn string_constructor<T:Hookable>(rt: &mut JsRuntime<T>) {
 
 fn string_proto_builtins<T:Hookable>() -> HashMap<String, JsBuiltinFunction<T>> {
     let mut builtins = HashMap::new();
-    builtins.insert("toString".to_string(), JsBuiltinFunction::new(object_tostring, 0));
+    builtins.insert("toString".to_string(), JsBuiltinFunction::new(object_tostring));
     return builtins;
 }
 
 // The Array class
-fn array_constructor<T:Hookable>(rt: &mut JsRuntime<T>) {    
+fn array_constructor<T:Hookable>(rt: &mut JsRuntime<T>, _argc: usize) {    
     let obj = JsObject::new_array(rt.prototypes.array_prototype.clone());
     let jv = SharedValue::new_object(obj);
     rt.push(jv);
 }
 
-fn array_push<T:Hookable>(rt: &mut JsRuntime<T>) {
+fn array_push<T:Hookable>(rt: &mut JsRuntime<T>, _argc: usize) {
     let target = rt.top(-2);
     assert!(target.is_object());
     let sobj = target.get_object();
@@ -209,7 +208,7 @@ fn array_push<T:Hookable>(rt: &mut JsRuntime<T>) {
     rt.push_number(object.get_array().len() as f64);
 }
 
-fn array_length<T:Hookable>(rt: &mut JsRuntime<T>) {
+fn array_length<T:Hookable>(rt: &mut JsRuntime<T>, _argc: usize) {
     let target = rt.top(-1);
     assert!(target.is_object());
     let sobj = target.get_object();
@@ -221,20 +220,20 @@ fn array_length<T:Hookable>(rt: &mut JsRuntime<T>) {
 
 fn array_proto_builtins<T:Hookable>() -> HashMap<String, JsBuiltinFunction<T>> {
     let mut builtins = HashMap::new();
-    builtins.insert("toString".to_string(), JsBuiltinFunction::new(object_tostring, 0));
-    builtins.insert("push".to_string(), JsBuiltinFunction::new(array_push, 1));
-    builtins.insert("__len__".to_string(), JsBuiltinFunction::new(array_length, 0));
+    builtins.insert("toString".to_string(), JsBuiltinFunction::new(object_tostring));
+    builtins.insert("push".to_string(), JsBuiltinFunction::new(array_push));
+    builtins.insert("__len__".to_string(), JsBuiltinFunction::new(array_length));
     return builtins;
 }
 
 // The Function class
-fn function_constructor<T:Hookable>(rt: &mut JsRuntime<T>) {
+fn function_constructor<T:Hookable>(rt: &mut JsRuntime<T>, _argc: usize) {
     let vmf = SharedFunction_new(VMFunction::new_anonymous());
     let fobj = JsObject::new_function(vmf, rt.cenv.clone(), rt.prototypes.function_prototype.clone());
     rt.push(SharedValue::new_object(fobj));
 }
 
-fn function_apply<T: Hookable>(rt: &mut JsRuntime<T>)  {
+fn function_apply<T: Hookable>(rt: &mut JsRuntime<T>, _argc: usize)  {
     let func = rt.top(-3);
     let new_thiz = rt.top(-2);
     let arguments_object = rt.top(-1);
@@ -268,13 +267,13 @@ fn function_apply<T: Hookable>(rt: &mut JsRuntime<T>)  {
 
 fn function_proto_builtins<T:Hookable>() -> HashMap<String, JsBuiltinFunction<T>> {
     let mut builtins = HashMap::new();
-    builtins.insert("toString".to_string(), JsBuiltinFunction::new(object_tostring, 0));
-    builtins.insert("apply".to_string(), JsBuiltinFunction::new(function_apply, 2));
+    builtins.insert("toString".to_string(), JsBuiltinFunction::new(object_tostring));
+    builtins.insert("apply".to_string(), JsBuiltinFunction::new(function_apply));
     return builtins;
 }
 
 // The Exception class
-fn exception_constructor<T:Hookable>(rt: &mut JsRuntime<T>) {
+fn exception_constructor<T:Hookable>(rt: &mut JsRuntime<T>, _argc: usize) {
     
     let value = rt.top(-1);    
     let msg = value.to_string();
@@ -284,7 +283,7 @@ fn exception_constructor<T:Hookable>(rt: &mut JsRuntime<T>) {
     rt.push(value);
 }
 
-fn exception_message<T:Hookable>(rt: &mut JsRuntime<T>) {
+fn exception_message<T:Hookable>(rt: &mut JsRuntime<T>, _argc: usize) {
     let exp_object = rt.top(-1).get_object();
     let exp = exp_object.borrow().get_exception();
     rt.push_string(exp.msg);
@@ -293,7 +292,7 @@ fn exception_message<T:Hookable>(rt: &mut JsRuntime<T>) {
 fn exception_proto_builtins<T:Hookable>() -> HashMap<String, JsBuiltinFunction<T>> {
     // TODO
     let mut builtins = HashMap::new();
-    builtins.insert("message".to_string(), JsBuiltinFunction::new(exception_message, 0));
+    builtins.insert("message".to_string(), JsBuiltinFunction::new(exception_message));
     return builtins;
 }
 
@@ -352,34 +351,34 @@ fn set_global_class<T:Hookable>(rt: &mut JsRuntime<T>, name: &str, class_obj: Sh
 
 pub fn prototypes_init<T:Hookable>(rt: &mut JsRuntime<T>) {
     // Object
-    let (top_class, top_prototype) = create_builtin_class(rt, JsBuiltinFunction::new(object_constructor, 1), object_proto_builtins(), None);
+    let (top_class, top_prototype) = create_builtin_class(rt, JsBuiltinFunction::new(object_constructor), object_proto_builtins(), None);
     create_class_functions(rt, top_class.clone(), object_builtins());
     set_global_class(rt, "Object", top_class.clone());
     rt.prototypes.object_prototype = top_prototype.clone();
     
     // String
-    let (string_classs_object, string_prototype) = create_builtin_class(rt, JsBuiltinFunction::new(string_constructor, 1), string_proto_builtins(), Some(top_prototype.clone()));
+    let (string_classs_object, string_prototype) = create_builtin_class(rt, JsBuiltinFunction::new(string_constructor), string_proto_builtins(), Some(top_prototype.clone()));
     set_global_class(rt, "String", string_classs_object.clone());
     rt.prototypes.string_prototype = string_prototype;
 
     // Array
-    let (array_classs_object, array_prototype) = create_builtin_class(rt, JsBuiltinFunction::new(array_constructor, 0), array_proto_builtins(), Some(top_prototype.clone()));
+    let (array_classs_object, array_prototype) = create_builtin_class(rt, JsBuiltinFunction::new(array_constructor), array_proto_builtins(), Some(top_prototype.clone()));
     set_global_class(rt, "Array", array_classs_object.clone());
     rt.prototypes.array_prototype = array_prototype;
 
     // Function
-    let (func_classs_object, func_prototype) = create_builtin_class(rt, JsBuiltinFunction::new(function_constructor, 0), function_proto_builtins(), Some(top_prototype.clone()));
+    let (func_classs_object, func_prototype) = create_builtin_class(rt, JsBuiltinFunction::new(function_constructor), function_proto_builtins(), Some(top_prototype.clone()));
     set_global_class(rt, "Function", func_classs_object.clone());
     rt.prototypes.function_prototype = func_prototype;
     
     // Exception
-    let (exp_classs_object, exp_prototype) = create_builtin_class(rt, JsBuiltinFunction::new(exception_constructor, 1), exception_proto_builtins(), Some(top_prototype.clone()));
+    let (exp_classs_object, exp_prototype) = create_builtin_class(rt, JsBuiltinFunction::new(exception_constructor), exception_proto_builtins(), Some(top_prototype.clone()));
     set_global_class(rt, "Error", exp_classs_object.clone());
     rt.prototypes.exception_prototype = exp_prototype;
 }
 
 fn create_console_object<T:Hookable>(runtime: &mut JsRuntime<T>) {
-    fn println<T:Hookable>(rt: &mut JsRuntime<T>) {
+    fn println<T:Hookable>(rt: &mut JsRuntime<T>, _argc: usize) {
         let msg = rt.top(-1).to_string();
         println!("{}", msg);
         rt.push_undefined();        
@@ -388,7 +387,7 @@ fn create_console_object<T:Hookable>(runtime: &mut JsRuntime<T>) {
     let console_value = SharedValue::new_vanilla(runtime.prototypes.object_prototype.clone());
 
     let mut prop = JsProperty::new();    
-    let fvalue =  SharedValue::new_object(runtime.new_builtin(JsBuiltinFunction::new(println, 1)));
+    let fvalue =  SharedValue::new_object(runtime.new_builtin(JsBuiltinFunction::new(println)));
     prop.fill(fvalue, JS_DEFAULT_ATTR, None, None);    
     
     console_value.get_object().borrow_mut().set_property("log", prop);
@@ -397,18 +396,20 @@ fn create_console_object<T:Hookable>(runtime: &mut JsRuntime<T>) {
 
 pub fn builtin_init<T:Hookable>(runtime: &mut JsRuntime<T>) {
     // global functions for runtime 
-    fn assert<T:Hookable>(rt: &mut JsRuntime<T>) {    
-        let b = rt.top(-2).to_boolean();
-        if !b {
-            let info = rt.top(-1).to_string();
-            panic!("ASSERT: {}", info);
+    fn assert<T:Hookable>(rt: &mut JsRuntime<T>, argc: usize) {    
+        if argc == 2 {
+            let b = rt.top(-2).to_boolean();
+            if !b {
+                let info = rt.top(-1).to_string();
+                panic!("ASSERT: {}", info);
+            }
         }
         rt.push_undefined();
     }
     // TODO : isFinite() isNaN() parseFloat() parseInt()
     
     // register some basic builtin functions
-    let fobj = runtime.new_builtin(JsBuiltinFunction::new(assert, 2));
+    let fobj = runtime.new_builtin(JsBuiltinFunction::new(assert));
     runtime.genv.borrow_mut().init_var("assert", SharedValue::new_object(fobj) );
 
     // register some basic runtime objects

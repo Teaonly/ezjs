@@ -25,8 +25,7 @@ pub trait Hookable : Clone + Sized {
 #[allow(non_camel_case_types)]
 #[derive(Clone)]
 pub struct JsBuiltinFunction<T> where T: Hookable {
-	pub f:		fn(&mut JsRuntime<T>),
-	pub argc:	usize,
+	pub f:		fn(&mut JsRuntime<T>, usize),
 }
 
 #[allow(non_camel_case_types)]
@@ -1486,20 +1485,10 @@ fn jscall_builtin<T: Hookable>(rt: &mut JsRuntime<T>, argc: usize) {
 	let fobj = rt.stack[bot-1].get_object();
 	let builtin = rt.builtins[fobj.borrow().get_builtin()].clone();
 
-	if argc > builtin.argc {
-		for _i in builtin.argc .. argc {
-			rt.pop(1);
-		}
-	} else if argc < builtin.argc {
-		for _i in argc .. builtin.argc {
-			rt.push_undefined();
-		}
-	}
-
-	(builtin.f)(rt);
+	(builtin.f)(rt, argc);
 
 	let jv = rt.stack.pop().unwrap();
-	rt.pop(builtin.argc + 2);
+	rt.pop(argc + 2);
 	rt.push(jv);
 }
 
