@@ -30,20 +30,26 @@ impl ezjs::runtime::Hookable for MyHook {
     }
 }
 
-fn new_hook(rt: &mut ezjs::runtime::JsRuntime<MyHook>, _argc: usize)  {
+fn new_hook(rt: &mut ezjs::runtime::JsRuntime<MyHook>, argc: usize)  {
+    if argc != 1 {
+        panic!("new_hook argument count error! {}", line!());
+    }
     let value = rt.top(-1).to_string();
     let new_hook = rt.new_hook(MyHook::new(value));
     rt.push_object( ezjs::value::SharedObject_new(new_hook));
 }
 
-fn print_hook(rt: &mut ezjs::runtime::JsRuntime<MyHook>, _argc: usize) {
+fn print_hook(rt: &mut ezjs::runtime::JsRuntime<MyHook>, argc: usize) {
+    if argc != 1 {
+        panic!("print_hook argument count error! {}", line!());
+    }
     let value = rt.top(-1);
     let hook = rt.get_hook( &value );
     println!("hook {:?} ", hook);
     rt.push_undefined();
 }
 
-fn show_hooks(rt: &mut ezjs::runtime::JsRuntime<MyHook>, _argc: usize)  {
+fn show_hooks(rt: &mut ezjs::runtime::JsRuntime<MyHook>, _argc: usize)  {    
     println!("{:?}", rt.hooks);
     rt.push_number( rt.hooks.keys().len() as f64);
 }

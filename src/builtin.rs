@@ -15,11 +15,13 @@ impl<T:Hookable> JsBuiltinFunction<T> {
 }
 
 // The Object class 
-fn object_constructor<T: Hookable>(rt: &mut JsRuntime<T>, _argc: usize) {
-    let value = rt.top(-1);
-    if value.is_something() {        
-        rt.push( value.duplicate() );
-        return;
+fn object_constructor<T: Hookable>(rt: &mut JsRuntime<T>, argc: usize) {
+    if argc > 0 {        
+        let value = rt.top(-1);
+        if value.is_something() {        
+            rt.push( value.duplicate() );
+            return;
+        }
     }
     rt.push( SharedValue::new_vanilla(rt.prototypes.object_prototype.clone()) );
 }
@@ -53,7 +55,11 @@ fn object_proto_builtins<T: Hookable>() -> HashMap<String, JsBuiltinFunction<T>>
     return builtins;
 }
 
-fn object_preventextensions<T: Hookable>(rt: &mut JsRuntime<T>, _argc: usize) {
+fn object_preventextensions<T: Hookable>(rt: &mut JsRuntime<T>, argc: usize) {
+    if argc != 1 {
+        panic!("object_preventextensions argument count error! {}", line!());
+    }
+
     let value = rt.top(-1);
     if value.is_object() {
         value.get_object().borrow_mut().extensible = false;
@@ -61,7 +67,11 @@ fn object_preventextensions<T: Hookable>(rt: &mut JsRuntime<T>, _argc: usize) {
     rt.push(value);
 }
 
-fn object_setprototypeof<T: Hookable>(rt: &mut JsRuntime<T>, _argc: usize) {
+fn object_setprototypeof<T: Hookable>(rt: &mut JsRuntime<T>, argc: usize) {
+    if argc != 2 {
+        panic!("object_setprototypeof argument count error! {}", line!());
+    }
+
     let target = rt.top(-2);
     if !target.is_object() {
         rt.push_undefined();    
@@ -78,7 +88,11 @@ fn object_setprototypeof<T: Hookable>(rt: &mut JsRuntime<T>, _argc: usize) {
     rt.push(target);
 }
 
-fn object_defineproperty<T: Hookable>(rt: &mut JsRuntime<T>, _argc: usize) {
+fn object_defineproperty<T: Hookable>(rt: &mut JsRuntime<T>, argc: usize) {
+    if argc != 3 {
+        panic!("object_defineproperty argument count error! {}", line!());
+    }
+
     let target = rt.top(-3);
     if !target.is_object() {
         rt.push(target);
@@ -173,7 +187,11 @@ fn object_builtins<T:Hookable>() -> HashMap<String, JsBuiltinFunction<T>> {
 }
 
 // The String class
-fn string_constructor<T:Hookable>(rt: &mut JsRuntime<T>, _argc: usize) {
+fn string_constructor<T:Hookable>(rt: &mut JsRuntime<T>, argc: usize) {
+    if argc != 1 {
+        panic!("string_constructor argument count error! {}", line!());
+    }
+
     let value = rt.top(-1);
     if value.is_string() {
         rt.push(value.duplicate());
@@ -195,7 +213,11 @@ fn array_constructor<T:Hookable>(rt: &mut JsRuntime<T>, _argc: usize) {
     rt.push(jv);
 }
 
-fn array_push<T:Hookable>(rt: &mut JsRuntime<T>, _argc: usize) {
+fn array_push<T:Hookable>(rt: &mut JsRuntime<T>, argc: usize) {
+    if argc != 1 {
+        panic!("array_push argument count error! {}", line!());
+    }
+
     let target = rt.top(-2);
     assert!(target.is_object());
     let sobj = target.get_object();
@@ -233,7 +255,11 @@ fn function_constructor<T:Hookable>(rt: &mut JsRuntime<T>, _argc: usize) {
     rt.push(SharedValue::new_object(fobj));
 }
 
-fn function_apply<T: Hookable>(rt: &mut JsRuntime<T>, _argc: usize)  {
+fn function_apply<T: Hookable>(rt: &mut JsRuntime<T>, argc: usize)  {
+    if argc != 2 {
+        panic!("function_apply argument count error! {}", line!());
+    }
+
     let func = rt.top(-3);
     let new_thiz = rt.top(-2);
     let arguments_object = rt.top(-1);
@@ -307,7 +333,10 @@ fn function_proto_builtins<T:Hookable>() -> HashMap<String, JsBuiltinFunction<T>
 }
 
 // The Exception class
-fn exception_constructor<T:Hookable>(rt: &mut JsRuntime<T>, _argc: usize) {
+fn exception_constructor<T:Hookable>(rt: &mut JsRuntime<T>, argc: usize) {
+    if argc != 1 {
+        panic!("exception_constructor argument count error! {}", line!());
+    }
     
     let value = rt.top(-1);    
     let msg = value.to_string();
