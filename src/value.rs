@@ -562,7 +562,7 @@ impl JsObject {
 			scope: scope,
 		});
 		JsObject {
-			extensible:	false,
+			extensible:	true,
 			__proto__: Some(prototype),
 			properties: HashMap::new(),
 			value: fvalue,

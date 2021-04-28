@@ -626,7 +626,7 @@ impl<T: Hookable> JsRuntime<T> {
 
 		// prototype object self
 		let mut prop = JsProperty::new();
-		prop.fill_attr(JS_READONLY_ATTR);
+		prop.fill_attr(JS_DEFAULT_ATTR);
 		prop.value = SharedValue::new_sobject(fobj.clone());
 		let mut prototype_obj = JsObject::new();
     	prototype_obj.extensible = true;
